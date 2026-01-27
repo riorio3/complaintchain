@@ -175,7 +175,7 @@ export function Dashboard() {
                 SEC, DOJ, CFTC
               </p>
               <p className="mt-1 text-xs">
-                Complaints data through Jan 24, 2026 • Covers Coinbase, Block, Robinhood, Kraken, Gemini & more
+                Data refreshes weekly • Covers Coinbase, Block, Robinhood, Kraken, Gemini & more
               </p>
             </div>
           </>

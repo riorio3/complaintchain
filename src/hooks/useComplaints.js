@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import complaintsData from '../data/complaints.json';
 
-// Extract complaints from the comprehensive static data
+// Extract complaints from the comprehensive data file
 // This data includes: Coinbase, Block/Cash App, Robinhood, Kraken, Gemini, Crypto.com, and more
-// Updated through January 24, 2026
+// Data auto-refreshes weekly via GitHub Actions
 const staticComplaints = complaintsData.hits?.hits?.map(hit => hit._source) || [];
 
 export function useComplaints(filters = {}) {

@@ -1,0 +1,127 @@
+name: Refresh CFPB Complaint Data
+
+on:
+  # Weekly schedule - Sundays at 6 AM UTC
+  schedule:
+    - cron: '0 6 * * 0'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      force_commit:
+        description: 'Force commit even if no changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  refresh-data:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get current complaint count
+        id: before
+        run: |
+          if [ -f src/data/complaints.json ]; then
+            count=$(node -e "console.log(require('./src/data/complaints.json').hits?.total?.value || 0)")
+            echo "count=$count" >> $GITHUB_OUTPUT
+          else
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch CFPB data
+        id: fetch
+        run: node scripts/fetch-cfpb-data.cjs
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet src/data/complaints.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in complaints data"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in complaints data"
+          fi
+
+      - name: Get new complaint count
+        id: after
+        run: |
+          count=$(node -e "console.log(require('./src/data/complaints.json').hits?.total?.value || 0)")
+          echo "count=$count" >> $GITHUB_OUTPUT
+          echo "New complaint count: $count"
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true' || inputs.force_commit == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          BEFORE=${{ steps.before.outputs.count }}
+          AFTER=${{ steps.after.outputs.count }}
+          DIFF=$((AFTER - BEFORE))
+
+          git add src/data/complaints.json
+          git commit -m "chore: refresh CFPB complaint data
+
+          Updated complaints: $BEFORE -> $AFTER (+$DIFF new)
+          Data source: CFPB Consumer Complaint Database
+          Fetched: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          git push
+
+      - name: Summary
+        run: |
+          echo "## Data Refresh Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Previous Count | ${{ steps.before.outputs.count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| New Count | ${{ steps.after.outputs.count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Changes Detected | ${{ steps.changes.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Timestamp | $(date -u) |" >> $GITHUB_STEP_SUMMARY
+
+  trigger-deploy:
+    needs: refresh-data
+    runs-on: ubuntu-latest
+    if: ${{ needs.refresh-data.result == 'success' }}
+
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        if: ${{ secrets.VERCEL_DEPLOY_HOOK != '' }}
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
+            curl -X POST "$VERCEL_DEPLOY_HOOK"
+            echo "Vercel deployment triggered"
+          fi
+
+      - name: Trigger Netlify Deploy Hook
+        if: ${{ secrets.NETLIFY_DEPLOY_HOOK != '' }}
+        env:
+          NETLIFY_DEPLOY_HOOK: ${{ secrets.NETLIFY_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$NETLIFY_DEPLOY_HOOK" ]; then
+            curl -X POST -d '{}' "$NETLIFY_DEPLOY_HOOK"
+            echo "Netlify deployment triggered"
+          fi
