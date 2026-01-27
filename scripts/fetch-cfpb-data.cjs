@@ -184,6 +184,29 @@ async function main() {
 
   try {
     const data = await fetchAllComplaints();
+
+    // Safety check: Don't overwrite good data with empty results
+    if (data.total === 0) {
+      console.error('\nERROR: Fetch returned 0 complaints - API may be down or query failed.');
+      console.error('Aborting to preserve existing data.');
+      process.exit(1);
+    }
+
+    // Safety check: Warn if we got significantly fewer results than expected (>50% drop)
+    if (fs.existsSync(CONFIG.OUTPUT_FILE)) {
+      try {
+        const existing = JSON.parse(fs.readFileSync(CONFIG.OUTPUT_FILE, 'utf8'));
+        const existingCount = existing.hits?.total?.value || 0;
+        if (existingCount > 0 && data.total < existingCount * 0.5) {
+          console.error(`\nWARNING: Got ${data.total} complaints but existing file has ${existingCount}.`);
+          console.error('This is a >50% drop - possible API issue. Aborting to preserve data.');
+          process.exit(1);
+        }
+      } catch (e) {
+        // Ignore errors reading existing file
+      }
+    }
+
     const output = formatOutput(data);
 
     console.log(`\nWriting ${data.total} complaints to ${CONFIG.OUTPUT_FILE}...`);
