@@ -269,19 +269,19 @@ export function PriceCorrelation({ trendData }) {
         </div>
 
         {/* Clickable Event Tags */}
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Key Events (click for details):</p>
-          <div className="flex flex-wrap gap-2">
-            {relevantEvents.slice(0, 6).map((event, i) => (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/50">
+          <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">Key Events (click for details):</p>
+          <div className="flex flex-wrap gap-1.5">
+            {relevantEvents.slice(0, 12).map((event, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedEvent(event)}
-                className={`inline-flex items-center px-2 py-1 text-xs rounded cursor-pointer hover:opacity-80 transition-opacity ${
+                className={`inline-flex items-center px-2 py-1 text-xs rounded cursor-pointer hover:brightness-110 transition-all ${
                   event.type === 'crash'
-                    ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                     : event.type === 'positive'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
-                    : 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
                 }`}
               >
                 {format(parseISO(event.date), 'MMM yy')}: {event.event}
