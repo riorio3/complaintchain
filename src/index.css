@@ -224,23 +224,81 @@
   border-color: #27272a !important;
 }
 
-/* More saturated colors for dark mode readability */
-.dark .text-red-300 {
+/* ==============================================
+   COLOR READABILITY - Light and Dark Modes
+   ============================================== */
+
+/* Light mode - use darker, more saturated colors */
+.text-red-400 {
+  color: #dc2626 !important; /* red-600 for light mode */
+}
+
+.text-emerald-400 {
+  color: #059669 !important; /* emerald-600 for light mode */
+}
+
+.text-yellow-400 {
+  color: #d97706 !important; /* amber-600 for light mode */
+}
+
+.text-green-400 {
+  color: #16a34a !important; /* green-600 for light mode */
+}
+
+.text-purple-400 {
+  color: #9333ea !important; /* purple-600 for light mode */
+}
+
+.text-violet-400 {
+  color: #7c3aed !important; /* violet-600 for light mode */
+}
+
+/* Dark mode - lighter, vibrant colors */
+.dark .text-red-400 {
   color: #f87171 !important; /* red-400 */
 }
 
-.dark .text-red-400 {
-  color: #f87171 !important; /* red-400 - more saturated */
+.dark .text-emerald-400 {
+  color: #34d399 !important; /* emerald-400 */
 }
 
-.dark .text-yellow-300 {
+.dark .text-yellow-400 {
   color: #fbbf24 !important; /* yellow-400 */
 }
 
-.dark .text-green-300 {
+.dark .text-green-400 {
   color: #4ade80 !important; /* green-400 */
 }
 
-.dark .text-purple-300 {
+.dark .text-purple-400 {
   color: #c084fc !important; /* purple-400 */
+}
+
+.dark .text-violet-400 {
+  color: #a78bfa !important; /* violet-400 */
+}
+
+/* Badge backgrounds need contrast too */
+.bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+.bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+.bg-yellow-500\/20 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+.dark .bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.dark .bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+.dark .bg-yellow-500\/20 {
+  background-color: rgba(245, 158, 11, 0.25) !important;
 }
