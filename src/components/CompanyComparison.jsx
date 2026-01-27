@@ -1,5 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
+
+// Colors for bars (matches IssueBreakdown)
+const COLORS = ['#1d4ed8', '#2563eb', '#3b82f6', '#0369a1', '#0891b2', '#0d9488', '#059669'];
 
 // Fraud keywords for detection
 const FRAUD_KEYWORDS = ['scam', 'fraud', 'stolen', 'hacked', 'unauthorized', 'phishing'];
@@ -9,6 +12,10 @@ export function CompanyComparison({ data, rawData = [] }) {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showAll, setShowAll] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [showReliefTooltip, setShowReliefTooltip] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+  const reliefBtnRef = useRef(null);
 
   // Enhanced data with fraud rate and trends
   const enhancedData = useMemo(() => {
@@ -163,11 +170,38 @@ export function CompanyComparison({ data, rawData = [] }) {
                 <span className="sm:hidden">Fraud</span>
                 <SortIcon column="fraudRate" />
               </th>
-              <th
-                className="hidden md:table-cell px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
-                onClick={() => handleSort('reliefRate')}
-              >
-                Relief % <SortIcon column="reliefRate" />
+              <th className="hidden md:table-cell px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <span
+                  className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
+                  onClick={() => handleSort('reliefRate')}
+                >
+                  Relief % <SortIcon column="reliefRate" />
+                </span>
+                <button
+                  type="button"
+                  ref={reliefBtnRef}
+                  className="ml-1 align-middle"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!showReliefTooltip && reliefBtnRef.current) {
+                      const rect = reliefBtnRef.current.getBoundingClientRect();
+                      setTooltipPos({ top: rect.top - 8, left: rect.left - 160 });
+                    }
+                    setShowReliefTooltip(!showReliefTooltip);
+                  }}
+                  onMouseEnter={() => {
+                    if (reliefBtnRef.current) {
+                      const rect = reliefBtnRef.current.getBoundingClientRect();
+                      setTooltipPos({ top: rect.top - 8, left: rect.left - 160 });
+                    }
+                    setShowReliefTooltip(true);
+                  }}
+                  onMouseLeave={() => setShowReliefTooltip(false)}
+                >
+                  <svg className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
               </th>
               <th className="px-2 sm:px-3 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 <span className="hidden sm:inline">30d Trend</span>
@@ -196,8 +230,11 @@ export function CompanyComparison({ data, rawData = [] }) {
                   <div className="flex items-center justify-end gap-1 sm:gap-2">
                     <div className="hidden sm:block w-16 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 rounded-full"
-                        style={{ width: `${Math.min((company.total / sortedData[0].total) * 100, 100)}%` }}
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min((company.total / sortedData[0].total) * 100, 100)}%`,
+                          backgroundColor: COLORS[index % COLORS.length],
+                        }}
                       />
                     </div>
                     <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 w-8 sm:w-12 text-right">
@@ -242,9 +279,9 @@ export function CompanyComparison({ data, rawData = [] }) {
                   {company.reliefRate}%
                 </td>
                 <td className="px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm text-right">
-                  {company.trend === 'up' ? (
+                  {company.trend === 'up' && company.trendPercent < 100 ? (
                     <span className="text-red-600 dark:text-red-400 font-semibold">↑{company.trendPercent}%</span>
-                  ) : company.trend === 'down' ? (
+                  ) : company.trend === 'down' && company.trendPercent < 100 ? (
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">↓{company.trendPercent}%</span>
                   ) : (
                     <span className="text-gray-500">—</span>
@@ -265,6 +302,20 @@ export function CompanyComparison({ data, rawData = [] }) {
           >
             {showAll ? `Show less` : `Show all ${sortedData.length} companies`}
           </button>
+        </div>
+      )}
+
+      {/* Relief % Tooltip */}
+      {showReliefTooltip && (
+        <div
+          className="fixed z-[100] w-52 p-3 text-xs font-normal text-left bg-gray-900 text-white rounded-lg shadow-lg pointer-events-none transform -translate-y-full"
+          style={{
+            top: tooltipPos.top,
+            left: Math.max(8, Math.min(tooltipPos.left, window.innerWidth - 220)),
+          }}
+        >
+          % of complaints where company provided monetary or non-monetary relief. Most are "Closed with explanation" (no relief). Only ~9% result in actual relief.
+          <div className="absolute top-full right-4 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-900" />
         </div>
       )}
 
@@ -323,12 +374,12 @@ export function CompanyComparison({ data, rawData = [] }) {
               <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">30-Day Trend</div>
                 <div className="flex items-center gap-2">
-                  {selectedCompany.trend === 'up' ? (
+                  {selectedCompany.trend === 'up' && selectedCompany.trendPercent < 100 ? (
                     <>
                       <span className="text-red-600 dark:text-red-400 text-lg font-bold">↑ {selectedCompany.trendPercent}%</span>
                       <span className="text-sm text-gray-700 dark:text-gray-300">increase in complaints</span>
                     </>
-                  ) : selectedCompany.trend === 'down' ? (
+                  ) : selectedCompany.trend === 'down' && selectedCompany.trendPercent < 100 ? (
                     <>
                       <span className="text-emerald-600 dark:text-emerald-400 text-lg font-bold">↓ {selectedCompany.trendPercent}%</span>
                       <span className="text-sm text-gray-700 dark:text-gray-300">decrease in complaints</span>
@@ -346,7 +397,11 @@ export function CompanyComparison({ data, rawData = [] }) {
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {selectedCompany.complaints?.slice(0, 5).map((complaint, i) => (
-                    <div key={i} className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg text-sm">
+                    <div
+                      key={i}
+                      className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => setSelectedComplaint(complaint)}
+                    >
                       <div className="flex justify-between items-start mb-1">
                         <span className="font-medium text-gray-900 dark:text-white">{complaint.issue}</span>
                         <span className="text-xs text-gray-400">{complaint.date_received?.slice(0, 10)}</span>
@@ -365,10 +420,121 @@ export function CompanyComparison({ data, rawData = [] }) {
                           </span>
                         </div>
                       )}
+                      <div className="text-xs text-blue-500 dark:text-blue-400 mt-1">Click to view details →</div>
                     </div>
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complaint Detail Modal */}
+      {selectedComplaint && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b dark:border-gray-700 flex justify-between items-start sticky top-0 bg-white dark:bg-gray-800">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Complaint Details
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {selectedComplaint.company} • {selectedComplaint.date_received?.slice(0, 10)}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedComplaint(null)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Issue & Sub-issue */}
+              <div>
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Issue</div>
+                <div className="text-gray-900 dark:text-white font-medium">{selectedComplaint.issue}</div>
+                {selectedComplaint.sub_issue && (
+                  <div className="text-gray-600 dark:text-gray-300 text-sm mt-1">{selectedComplaint.sub_issue}</div>
+                )}
+              </div>
+
+              {/* Product & Sub-product */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Product</div>
+                  <div className="text-gray-900 dark:text-white">{selectedComplaint.product || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Sub-product</div>
+                  <div className="text-gray-900 dark:text-white">{selectedComplaint.sub_product || 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* State & Submitted via */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">State</div>
+                  <div className="text-gray-900 dark:text-white">{selectedComplaint.state || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Submitted via</div>
+                  <div className="text-gray-900 dark:text-white">{selectedComplaint.submitted_via || 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* Response Status */}
+              <div className="flex flex-wrap gap-2">
+                {selectedComplaint.company_response && (
+                  <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
+                    selectedComplaint.company_response.toLowerCase().includes('relief')
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                  }`}>
+                    {selectedComplaint.company_response}
+                  </span>
+                )}
+                {selectedComplaint.timely === 'Yes' && (
+                  <span className="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    Timely Response
+                  </span>
+                )}
+                {selectedComplaint.consumer_disputed === 'Yes' && (
+                  <span className="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                    Consumer Disputed
+                  </span>
+                )}
+              </div>
+
+              {/* Narrative */}
+              {selectedComplaint.complaint_what_happened && (
+                <div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Consumer Narrative</div>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-64 overflow-y-auto">
+                    {selectedComplaint.complaint_what_happened}
+                  </div>
+                </div>
+              )}
+
+              {/* Complaint ID */}
+              {selectedComplaint.complaint_id && (
+                <div className="text-xs text-gray-400 dark:text-gray-500 pt-2 border-t dark:border-gray-700">
+                  Complaint ID: {selectedComplaint.complaint_id}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t dark:border-gray-700">
+              <button
+                onClick={() => setSelectedComplaint(null)}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
