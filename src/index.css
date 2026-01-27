@@ -1,37 +1,79 @@
 @import "tailwindcss";
 
 /*
- * Dark Mode: True black/zinc palette (no blue tint)
- * Light Mode: Clean white backgrounds
+ * Theme: Neutral zinc palette for both modes
+ * Light Mode: White/light zinc backgrounds
+ * Dark Mode: True black/dark zinc backgrounds
  */
 
-/* Override Tailwind's gray palette in dark mode to zinc (neutral) */
-@layer base {
-  /* Dark mode - true blacks and neutral grays */
-  .dark {
-    --color-gray-50: 24 24 27;
-    --color-gray-100: 39 39 42;
-    --color-gray-200: 52 52 56;
-    --color-gray-300: 82 82 91;
-    --color-gray-400: 113 113 122;
-    --color-gray-500: 142 142 148;
-    --color-gray-600: 161 161 170;
-    --color-gray-700: 24 24 27;
-    --color-gray-800: 14 14 16;
-    --color-gray-900: 9 9 11;
-    --color-gray-950: 4 4 5;
-  }
+/* ============================================
+   LIGHT MODE - Clean whites and neutral grays
+   ============================================ */
+
+/* Main backgrounds */
+.bg-gray-100 {
+  background-color: #f4f4f5 !important; /* zinc-100 */
 }
 
-/* Force dark mode backgrounds to true black */
+.bg-gray-50 {
+  background-color: #fafafa !important; /* zinc-50 */
+}
+
+.bg-white {
+  background-color: #ffffff !important;
+}
+
+.bg-gray-900 {
+  background-color: #18181b !important; /* zinc-900 */
+}
+
+/* Text colors - neutral zinc */
+.text-gray-900 {
+  color: #18181b !important;
+}
+
+.text-gray-800 {
+  color: #27272a !important;
+}
+
+.text-gray-700 {
+  color: #3f3f46 !important;
+}
+
+.text-gray-600 {
+  color: #52525b !important;
+}
+
+.text-gray-500 {
+  color: #71717a !important;
+}
+
+.text-gray-400 {
+  color: #a1a1aa !important;
+}
+
+/* Borders - neutral */
+.border-gray-200 {
+  border-color: #e4e4e7 !important;
+}
+
+.border-gray-300 {
+  border-color: #d4d4d8 !important;
+}
+
+/* ============================================
+   DARK MODE - True blacks and dark zinc
+   ============================================ */
+
+/* Main backgrounds */
 .dark body,
 .dark .bg-gray-900 {
-  background-color: #09090b !important;
+  background-color: #09090b !important; /* true black */
 }
 
 .dark .bg-gray-800,
 .dark .bg-white {
-  background-color: #0e0e10 !important;
+  background-color: #0e0e10 !important; /* near black */
 }
 
 .dark .bg-gray-700 {
@@ -65,7 +107,7 @@
   border-color: #27272a !important;
 }
 
-/* Dark mode text - neutral grays */
+/* Dark mode text */
 .dark .text-gray-900,
 .dark .text-gray-800 {
   color: #fafafa !important;
@@ -119,7 +161,7 @@
   --tw-ring-color: #27272a !important;
 }
 
-/* Card shadows for depth in dark mode */
+/* Card shadows */
 .dark .shadow {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4) !important;
 }
@@ -176,7 +218,7 @@
   background-color: rgba(0, 0, 0, 0.7) !important;
 }
 
-/* Ensure charts and tooltips have proper dark backgrounds */
+/* Chart tooltips */
 .dark .recharts-default-tooltip {
   background-color: #0e0e10 !important;
   border-color: #27272a !important;
