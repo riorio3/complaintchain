@@ -3,35 +3,64 @@ import { useState, useEffect, useCallback } from 'react';
 // RSS-to-JSON proxy (free, no auth)
 const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
-// News sources
+// News sources - mix of official and crypto news
 const NEWS_SOURCES = [
+  // Official government sources
   {
     name: 'SEC Press Releases',
     url: 'https://www.sec.gov/news/pressreleases.rss',
     agency: 'SEC',
+    filterCrypto: true, // Only show crypto-related
+  },
+  // Crypto news - regulation focused
+  {
+    name: 'Cointelegraph Regulation',
+    url: 'https://cointelegraph.com/rss/tag/regulation',
+    agency: 'NEWS',
+    filterCrypto: false, // Already crypto-focused
+    filterRegulation: true, // Filter for regulatory news
   },
   {
-    name: 'CFTC Press Releases',
-    url: 'https://www.cftc.gov/rss/pressreleasesfeed.xml',
-    agency: 'CFTC',
+    name: 'CoinDesk',
+    url: 'https://www.coindesk.com/arc/outboundfeeds/rss/',
+    agency: 'NEWS',
+    filterCrypto: false,
+    filterRegulation: true,
   },
   {
-    name: 'DOJ Press Releases',
-    url: 'https://www.justice.gov/feeds/opa/justice-news.xml',
-    agency: 'DOJ',
+    name: 'Decrypt',
+    url: 'https://decrypt.co/feed',
+    agency: 'NEWS',
+    filterCrypto: false,
+    filterRegulation: true,
   },
 ];
 
-// Keywords to filter for crypto-related news
+// Keywords to filter for crypto-related news (for SEC)
 const CRYPTO_KEYWORDS = [
   'crypto', 'bitcoin', 'digital asset', 'virtual currency', 'blockchain',
   'coinbase', 'binance', 'kraken', 'gemini', 'ftx', 'celsius', 'voyager',
-  'defi', 'nft', 'token', 'stablecoin', 'exchange', 'trading platform'
+  'defi', 'nft', 'token', 'stablecoin', 'exchange', 'trading platform',
+  'cryptocurrency', 'ethereum', 'ripple', 'tether', 'usdc'
+];
+
+// Keywords to filter for regulatory news (for crypto news sources)
+const REGULATION_KEYWORDS = [
+  'sec', 'cftc', 'doj', 'fbi', 'treasury', 'regulation', 'regulatory',
+  'lawsuit', 'enforcement', 'fine', 'penalty', 'charged', 'indicted',
+  'settlement', 'court', 'judge', 'ruling', 'ban', 'crackdown',
+  'investigation', 'subpoena', 'compliance', 'license', 'approved',
+  'senator', 'congress', 'bill', 'law', 'legislation', 'hearing'
 ];
 
 function isCryptoRelated(title, description) {
   const text = `${title} ${description}`.toLowerCase();
   return CRYPTO_KEYWORDS.some(keyword => text.includes(keyword));
+}
+
+function isRegulationRelated(title, description) {
+  const text = `${title} ${description}`.toLowerCase();
+  return REGULATION_KEYWORDS.some(keyword => text.includes(keyword));
 }
 
 export function useRegulatoryNews(refreshInterval = 60000) {
@@ -54,7 +83,14 @@ export function useRegulatoryNews(refreshInterval = 60000) {
           if (data.status !== 'ok') return [];
 
           return (data.items || [])
-            .filter(item => isCryptoRelated(item.title || '', item.description || ''))
+            .filter(item => {
+              const title = item.title || '';
+              const desc = item.description || '';
+              // Apply filters based on source settings
+              if (source.filterCrypto && !isCryptoRelated(title, desc)) return false;
+              if (source.filterRegulation && !isRegulationRelated(title, desc)) return false;
+              return true;
+            })
             .map(item => ({
               title: item.title,
               description: item.description?.replace(/<[^>]*>/g, '').slice(0, 200) + '...',

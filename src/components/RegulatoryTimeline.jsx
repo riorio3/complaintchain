@@ -10,6 +10,7 @@ const AGENCY_COLORS = {
   FTC: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   CFPB: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
   OFAC: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+  NEWS: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
 };
 
 export function RegulatoryTimeline() {
@@ -71,7 +72,7 @@ export function RegulatoryTimeline() {
             Regulatory Actions
           </h3>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-            {showLive ? 'Live regulatory news' : 'Major enforcement'}
+            {showLive ? 'Live SEC + crypto regulatory news' : 'Major enforcement'}
             {lastUpdated && showLive && (
               <span className="ml-1 sm:ml-2 text-xs">
                 ({formatTime(lastUpdated)})
@@ -162,7 +163,7 @@ export function RegulatoryTimeline() {
       {/* Agency Legend */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex flex-wrap gap-2">
-          {Object.keys(AGENCY_COLORS).slice(0, 6).map(agency => (
+          {Object.keys(AGENCY_COLORS).map(agency => (
             <button
               key={agency}
               onClick={() => setSelectedAgency(selectedAgency === agency ? 'all' : agency)}
