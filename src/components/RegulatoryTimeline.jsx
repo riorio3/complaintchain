@@ -64,26 +64,26 @@ export function RegulatoryTimeline() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
             Regulatory Actions
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {showLive ? 'Live crypto regulatory news' : 'Major enforcement actions'}
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            {showLive ? 'Live regulatory news' : 'Major enforcement'}
             {lastUpdated && showLive && (
-              <span className="ml-2 text-xs">
-                (Updated {formatTime(lastUpdated)})
+              <span className="ml-1 sm:ml-2 text-xs">
+                ({formatTime(lastUpdated)})
               </span>
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Live/Archive Toggle */}
           <button
             onClick={() => setShowLive(!showLive)}
-            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+            className={`px-2 sm:px-3 py-1 text-xs rounded-full transition-colors ${
               showLive
                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                 : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
@@ -94,11 +94,11 @@ export function RegulatoryTimeline() {
           <select
             value={selectedAgency}
             onChange={(e) => setSelectedAgency(e.target.value)}
-            className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md px-1 sm:px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             {agencies.map(agency => (
               <option key={agency} value={agency}>
-                {agency === 'all' ? 'All Agencies' : agency}
+                {agency === 'all' ? 'All' : agency}
               </option>
             ))}
           </select>
@@ -114,18 +114,18 @@ export function RegulatoryTimeline() {
       )}
 
       {/* News Items */}
-      <div className="space-y-3 max-h-80 overflow-y-auto">
+      <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
         {displayItems.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-            {showLive ? 'No crypto-related regulatory news found' : 'No actions found'}
+          <p className="text-center text-gray-500 dark:text-gray-400 py-6 sm:py-8 text-sm">
+            {showLive ? 'No crypto regulatory news found' : 'No actions found'}
           </p>
         ) : (
           displayItems.map((item, index) => (
             <div
               key={`${item.date}-${index}`}
-              className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
             >
-              <div className="flex-shrink-0 w-20 text-xs text-gray-500 dark:text-gray-400 pt-1">
+              <div className="flex-shrink-0 w-16 sm:w-20 text-xs text-gray-500 dark:text-gray-400 pt-0.5 sm:pt-1">
                 {formatDate(item.date)}
                 {item.isLive && (
                   <span className="block text-green-600 dark:text-green-400 mt-1">● Live</span>

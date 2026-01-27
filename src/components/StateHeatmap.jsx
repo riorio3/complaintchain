@@ -79,18 +79,18 @@ function StateHeatmap({ data, selectedState, onStateClick }) {
   }, [stateData]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex justify-between items-start gap-2 mb-3 sm:mb-4">
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Complaints by State</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Click a state to filter</p>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">Complaints by State</h3>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Tap a state to filter</p>
         </div>
         {selectedState && (
           <button
             onClick={() => onStateClick(null)}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+            className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 active:text-blue-800 flex-shrink-0"
           >
-            Clear filter ({selectedState})
+            Clear ({selectedState})
           </button>
         )}
       </div>
@@ -132,9 +132,9 @@ function StateHeatmap({ data, selectedState, onStateClick }) {
       </div>
 
       {/* Color Legend */}
-      <div className="mt-4 border-t dark:border-gray-700 pt-4">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Complaint Volume:</p>
-        <div className="flex items-center gap-1 mb-3">
+      <div className="mt-3 sm:mt-4 border-t dark:border-gray-700 pt-3 sm:pt-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Volume:</p>
+        <div className="flex items-center gap-0.5 sm:gap-1 mb-2 sm:mb-3">
           <span className="text-xs text-gray-500 dark:text-gray-400 mr-1">Low</span>
           {COLOR_SCALE.map((color, i) => (
             <div
@@ -142,7 +142,7 @@ function StateHeatmap({ data, selectedState, onStateClick }) {
               className="flex flex-col items-center"
             >
               <div
-                className="w-8 h-4 rounded-sm"
+                className="w-6 sm:w-8 h-3 sm:h-4 rounded-sm"
                 style={{ backgroundColor: color }}
                 title={getLegendLabel(i, quantiles)}
               />

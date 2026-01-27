@@ -241,25 +241,37 @@ export function PriceCorrelation({ trendData }) {
   return (
     <>
       {/* Main Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              BTC Price vs Complaint Volume
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {priceLoading ? 'Loading...' : (
-                <>
-                  {isLive ? '● Live' : 'Static data'}
-                  {lastUpdated && <span className="ml-1">(Updated {formatTime(lastUpdated)})</span>}
-                </>
-              )}
-            </p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+          <div className="flex items-center justify-between sm:block">
+            <div>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
+                BTC Price vs Complaints
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                {priceLoading ? 'Loading...' : (
+                  <>
+                    {isLive ? '● Live' : 'Static'}
+                    {lastUpdated && <span className="hidden sm:inline ml-1">(Updated {formatTime(lastUpdated)})</span>}
+                  </>
+                )}
+              </p>
+            </div>
+            {/* Expand Button - mobile */}
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="sm:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
+              title="Expand chart"
+            >
+              <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </button>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3">
             {/* Current BTC Price */}
             {currentPrice && (
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
                   ${currentPrice.price?.toLocaleString()}
                 </div>
@@ -281,10 +293,10 @@ export function PriceCorrelation({ trendData }) {
                 </span>
               </div>
             )}
-            {/* Expand Button */}
+            {/* Expand Button - desktop */}
             <button
               onClick={() => setIsExpanded(true)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="hidden sm:block p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               title="Expand chart"
             >
               <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,19 +306,19 @@ export function PriceCorrelation({ trendData }) {
           </div>
         </div>
 
-        <div className="h-72">
+        <div className="h-56 sm:h-72">
           <ChartContent />
         </div>
 
         {/* Clickable Event Tags */}
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/50 text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">Key Events (click for details):</p>
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            {relevantEvents.slice(0, 12).map((event, i) => (
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700/50 text-center">
+          <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">Key Events (tap for details):</p>
+          <div className="flex flex-wrap gap-1 sm:gap-1.5 justify-center">
+            {relevantEvents.slice(0, 6).map((event, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedEvent(event)}
-                className={`inline-flex items-center px-2 py-1 text-xs rounded cursor-pointer hover:brightness-110 transition-all ${
+                className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded cursor-pointer active:brightness-90 transition-all ${
                   event.type === 'crash'
                     ? 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30'
                     : event.type === 'positive'
@@ -314,7 +326,9 @@ export function PriceCorrelation({ trendData }) {
                     : 'bg-violet-100 text-violet-700 border border-violet-300 dark:bg-violet-500/20 dark:text-violet-400 dark:border-violet-500/30'
                 }`}
               >
-                {format(parseISO(event.date), 'MMM yy')}: {event.event}
+                <span className="hidden sm:inline">{format(parseISO(event.date), 'MMM yy')}: </span>
+                <span className="sm:hidden">{format(parseISO(event.date), 'M/yy')} </span>
+                {event.event.length > 15 ? event.event.substring(0, 15) + '...' : event.event}
               </button>
             ))}
           </div>

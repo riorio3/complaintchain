@@ -6,10 +6,10 @@ export function Filters({ filters, setFilters, companies, issues }) {
   const activeFiltersCount = Object.values(filters).filter(v => v && v !== 'all').length;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-      <div className="flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 items-end">
+        <div className="col-span-2 sm:flex-1 sm:min-w-[200px]">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
           <select
             value={filters.company || 'all'}
             onChange={e => handleChange('company', e.target.value)}
@@ -18,14 +18,14 @@ export function Filters({ filters, setFilters, companies, issues }) {
             <option value="all">All Companies</option>
             {companies.map(company => (
               <option key={company} value={company}>
-                {company.length > 40 ? `${company.substring(0, 40)}...` : company}
+                {company.length > 30 ? `${company.substring(0, 30)}...` : company}
               </option>
             ))}
           </select>
         </div>
 
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Type</label>
+        <div className="col-span-2 sm:flex-1 sm:min-w-[200px]">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Type</label>
           <select
             value={filters.issue || 'all'}
             onChange={e => handleChange('issue', e.target.value)}
@@ -34,14 +34,14 @@ export function Filters({ filters, setFilters, companies, issues }) {
             <option value="all">All Issues</option>
             {issues.map(issue => (
               <option key={issue} value={issue}>
-                {issue.length > 40 ? `${issue.substring(0, 40)}...` : issue}
+                {issue.length > 30 ? `${issue.substring(0, 30)}...` : issue}
               </option>
             ))}
           </select>
         </div>
 
-        <div className="min-w-[150px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
+        <div className="col-span-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
           <input
             type="date"
             value={filters.dateFrom || ''}
@@ -50,8 +50,8 @@ export function Filters({ filters, setFilters, companies, issues }) {
           />
         </div>
 
-        <div className="min-w-[150px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
+        <div className="col-span-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
           <input
             type="date"
             value={filters.dateTo || ''}
@@ -62,7 +62,7 @@ export function Filters({ filters, setFilters, companies, issues }) {
 
         <button
           onClick={() => setFilters({})}
-          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          className="col-span-2 sm:col-span-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
         >
           Reset {activeFiltersCount > 0 && `(${activeFiltersCount})`}
         </button>

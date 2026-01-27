@@ -113,15 +113,26 @@ export function IssueInsights({ data, onFilterByKeyword }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            Issue Pattern Analysis
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">
+              Issue Pattern Analysis
+            </h3>
+            <span className={`sm:hidden inline-flex items-center px-2 py-0.5 text-xs font-bold rounded-full flex-shrink-0 ${
+              fraudStats.percentage > 30
+                ? 'bg-red-600 text-white'
+                : fraudStats.percentage > 15
+                ? 'bg-amber-500 text-white'
+                : 'bg-green-600 text-white'
+            }`}>
+              {fraudStats.percentage}% fraud
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
             Based on {narrativeCount.toLocaleString()} of {data.length.toLocaleString()} complaints
-            <span className="group relative">
+            <span className="group relative hidden sm:inline">
               <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
@@ -131,10 +142,10 @@ export function IssueInsights({ data, onFilterByKeyword }) {
             </span>
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-            Click any category below to view individual complaints
+            Tap any category to view complaints
           </p>
         </div>
-        <div className="text-right">
+        <div className="hidden sm:block text-right flex-shrink-0">
           <span className={`inline-flex items-center px-2 py-1 text-xs font-bold rounded-full ${
             fraudStats.percentage > 30
               ? 'bg-red-600 text-white'
@@ -152,21 +163,21 @@ export function IssueInsights({ data, onFilterByKeyword }) {
         {patternAnalysis.slice(0, 5).map(pattern => (
           <div
             key={pattern.id}
-            className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+            className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer active:bg-gray-200 dark:active:bg-gray-600"
             onClick={() => handlePatternClick(pattern)}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{pattern.icon}</span>
-                <span className="font-medium text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base sm:text-lg flex-shrink-0">{pattern.icon}</span>
+                <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white truncate">
                   {pattern.label}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                  {pattern.count.toLocaleString()} mentions →
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <span className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
+                  {pattern.count.toLocaleString()} →
                 </span>
-                <span className={`inline-flex px-2 py-0.5 text-xs font-bold rounded-full ${
+                <span className={`inline-flex px-1.5 sm:px-2 py-0.5 text-xs font-bold rounded-full ${
                   pattern.percentage > 30
                     ? 'bg-red-600 text-white dark:bg-red-600 dark:text-white'
                     : pattern.percentage > 15
@@ -186,8 +197,8 @@ export function IssueInsights({ data, onFilterByKeyword }) {
               />
             </div>
 
-            {/* Actionable insight */}
-            <p className="text-xs text-gray-700 dark:text-gray-300">
+            {/* Actionable insight - hide on very small screens */}
+            <p className="hidden sm:block text-xs text-gray-700 dark:text-gray-300">
               <span className="font-semibold">Action:</span> {pattern.actionable}
             </p>
           </div>

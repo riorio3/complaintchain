@@ -109,20 +109,20 @@ export function CompanyComparison({ data, rawData = [] }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <div className="flex justify-between items-start mb-3 sm:mb-4">
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Company Comparison</h3>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">Company Comparison</h3>
           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            Click any row to see company details • Click headers to sort
+            Tap row for details <span className="hidden sm:inline">• Tap headers to sort</span>
           </p>
         </div>
         <div className="text-xs text-gray-400 dark:text-gray-500">
-          {sortedData.length} companies
+          {sortedData.length} cos
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
         <table className="min-w-full">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-700">

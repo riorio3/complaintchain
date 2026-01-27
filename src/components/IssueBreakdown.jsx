@@ -65,12 +65,12 @@ export function IssueBreakdown({ data, rawData = [] }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Top Issues by Category</h3>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white">Top Issues by Category</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Click to see individual complaints {getDateRange() && `• ${getDateRange()}`}
+            Tap to see complaints {getDateRange() && <span className="hidden sm:inline">• {getDateRange()}</span>}
           </p>
         </div>
       </div>
@@ -85,26 +85,26 @@ export function IssueBreakdown({ data, rawData = [] }) {
             <button
               key={item.issue}
               onClick={() => handleBarClick(item)}
-              className="w-full group"
+              className="w-full group active:bg-gray-100 dark:active:bg-gray-700 rounded-lg p-1 -m-1 transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {/* Color indicator */}
                 <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
                 {/* Issue name */}
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {item.issue}
                     </span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white flex-shrink-0">
                       {item.count.toLocaleString()}
                     </span>
                   </div>
                   {/* Progress bar */}
-                  <div className="mt-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="mt-1 h-1.5 sm:h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-300 group-hover:opacity-80"
                       style={{
