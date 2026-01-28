@@ -267,7 +267,29 @@ export function PriceCorrelation({ trendData }) {
     </ResponsiveContainer>
   );
 
-  // Event detail modal
+  // Event hover tooltip (compact version)
+  const EventTooltip = ({ event }) => (
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 bg-gray-900 dark:bg-gray-800 text-white rounded-lg shadow-xl z-50 pointer-events-none">
+      <div className="flex items-start gap-2 mb-2">
+        <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded flex-shrink-0 ${
+          event.type === 'crash' ? 'bg-red-500/80 text-white' :
+          event.type === 'positive' ? 'bg-green-500/80 text-white' :
+          'bg-purple-500/80 text-white'
+        }`}>
+          {event.type === 'crash' ? 'Crash' : event.type === 'positive' ? 'Positive' : 'Regulatory'}
+        </span>
+        <span className="text-[10px] text-gray-400">{format(parseISO(event.date), 'MMM d, yyyy')}</span>
+      </div>
+      <h4 className="text-sm font-semibold mb-1">{event.event}</h4>
+      <p className="text-xs text-gray-300 line-clamp-2 mb-2">{event.description}</p>
+      <p className="text-[10px] text-gray-400 italic line-clamp-1">Impact: {event.impact}</p>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
+        <div className="border-8 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+      </div>
+    </div>
+  );
+
+  // Event detail modal (full version on click)
   const EventModal = ({ event, onClose }) => (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
@@ -362,8 +384,25 @@ export function PriceCorrelation({ trendData }) {
           </div>
         </div>
 
-        <div className="h-48 sm:h-72 overflow-hidden">
+        <div className="relative h-48 sm:h-72 overflow-hidden">
           <ChartContent />
+          {/* Floating tooltip when hovering chart markers */}
+          {!isMobile && hoveredEvent && (
+            <div className="absolute top-2 right-2 w-64 p-2.5 bg-gray-900/95 dark:bg-gray-800/95 text-white rounded-lg shadow-xl z-20 pointer-events-none">
+              <div className="flex items-start gap-2 mb-1.5">
+                <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded flex-shrink-0 ${
+                  hoveredEvent.type === 'crash' ? 'bg-red-500/80 text-white' :
+                  hoveredEvent.type === 'positive' ? 'bg-green-500/80 text-white' :
+                  'bg-purple-500/80 text-white'
+                }`}>
+                  {hoveredEvent.type === 'crash' ? 'Crash' : hoveredEvent.type === 'positive' ? 'Positive' : 'Regulatory'}
+                </span>
+                <span className="text-[10px] text-gray-400">{format(parseISO(hoveredEvent.date), 'MMM d, yyyy')}</span>
+              </div>
+              <h4 className="text-xs font-semibold mb-1">{hoveredEvent.event}</h4>
+              <p className="text-[10px] text-gray-300 line-clamp-2">{hoveredEvent.description}</p>
+            </div>
+          )}
         </div>
 
         {/* Clickable Event Tags - Desktop only, newest first, with hover interaction */}
