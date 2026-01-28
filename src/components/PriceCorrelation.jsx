@@ -428,13 +428,13 @@ export function PriceCorrelation({ trendData }) {
                 <ChartContent showEventMarkers={true} />
               </div>
 
-              {/* Interactive Event Legend - Hidden on mobile */}
-              <div className="hidden sm:block mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              {/* Interactive Event Legend - Show on all screens */}
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                    Chart Events ({relevantEvents.length} shown)
+                  <h3 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                    Chart Events ({relevantEvents.length})
                   </h3>
-                  <div className="flex gap-3 text-xs">
+                  <div className="hidden sm:flex gap-3 text-xs">
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Positive
                     </span>
@@ -446,16 +446,16 @@ export function PriceCorrelation({ trendData }) {
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-1.5 max-h-32 sm:max-h-48 overflow-y-auto">
                   {relevantEvents
-                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
                     .map((event, i) => (
                     <button
                       key={i}
                       onClick={() => setSelectedEvent(event)}
                       onMouseEnter={() => setHoveredEvent(event)}
                       onMouseLeave={() => setHoveredEvent(null)}
-                      className={`p-2 rounded text-left transition-all border ${
+                      className={`p-1.5 sm:p-2 rounded text-left transition-all border ${
                         hoveredEvent === event
                           ? 'ring-2 ring-blue-500 border-transparent'
                           : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
@@ -467,29 +467,29 @@ export function PriceCorrelation({ trendData }) {
                           : 'bg-violet-500/10 hover:bg-violet-500/20'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: getEventColor(event.type) }}
                         />
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                          {format(parseISO(event.date), 'MMM yyyy')}
+                        <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                          {format(parseISO(event.date), "MMM ''yy")}
                         </span>
-                        <span className="text-xs text-gray-800 dark:text-gray-200 truncate">
+                        <span className="text-[10px] sm:text-xs text-gray-800 dark:text-gray-200 truncate">
                           {event.event}
                         </span>
                       </div>
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                <p className="hidden sm:block mt-2 text-xs text-gray-400 dark:text-gray-500">
                   Hover over an event to highlight its line on the chart. Click for details.
                 </p>
               </div>
 
-              {/* Correlation Analysis */}
+              {/* Correlation Analysis - Hidden on mobile */}
               {correlation !== null && (
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="hidden sm:block mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Correlation Analysis</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     The correlation coefficient of <span className="font-mono font-medium">{correlation}</span> indicates a{' '}
