@@ -1,12 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Multiple CORS proxies to try (in order of reliability)
+// Multiple CORS proxies - race them for fastest response
 const CORS_PROXIES = [
   'https://corsproxy.io/?',
   'https://api.allorigins.win/raw?url=',
   'https://api.codetabs.com/v1/proxy?quest=',
 ];
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+
+// Cache configuration
+const CACHE_KEY = 'btc_price_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Reduced timeout for faster failure detection
+const REQUEST_TIMEOUT = 3000;
 
 // Fallback static data in case API fails (2019 through Jan 2026)
 const FALLBACK_PRICES = {
@@ -42,6 +49,59 @@ const FALLBACK_PRICES = {
   '2026-01': 102000,
 };
 
+// Pre-computed fallback array (optimization: avoid repeated conversion)
+const FALLBACK_ARRAY = Object.entries(FALLBACK_PRICES)
+  .map(([month, price]) => ({ month, price }))
+  .sort((a, b) => a.month.localeCompare(b.month));
+
+// Race multiple proxies - first successful response wins
+async function fetchWithProxyRace(url, timeout = REQUEST_TIMEOUT) {
+  const fetchPromises = CORS_PROXIES.map(async (proxy) => {
+    const proxyUrl = proxy.includes('?')
+      ? `${proxy}${encodeURIComponent(url)}`
+      : `${proxy}${url}`;
+
+    const response = await fetch(proxyUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(timeout),
+    });
+
+    if (!response.ok) throw new Error('Response not ok');
+    return response.json();
+  });
+
+  // Promise.any returns first fulfilled promise
+  return Promise.any(fetchPromises);
+}
+
+// Load cached data from localStorage
+function loadFromCache() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_TTL) {
+        return data;
+      }
+    }
+  } catch {
+    // Ignore cache errors
+  }
+  return null;
+}
+
+// Save data to localStorage cache
+function saveToCache(priceData, currentPrice) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      data: { priceData, currentPrice },
+      timestamp: Date.now(),
+    }));
+  } catch {
+    // Ignore cache errors (quota exceeded, etc.)
+  }
+}
+
 export function useCryptoPrice(coin = 'bitcoin', days = 2555, refreshInterval = 300000) {
   const [priceData, setPriceData] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(null);
@@ -49,153 +109,163 @@ export function useCryptoPrice(coin = 'bitcoin', days = 2555, refreshInterval = 
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isLive, setIsLive] = useState(false);
+  const isFetching = useRef(false);
 
-  // Fetch current price from simple endpoint (more reliable)
+  // Load cached data on mount (instant display)
+  useEffect(() => {
+    const cached = loadFromCache();
+    if (cached) {
+      setPriceData(cached.priceData);
+      setCurrentPrice(cached.currentPrice);
+      setLoading(false);
+      setIsLive(true);
+    }
+  }, []);
+
+  // Fetch current price (races all proxies)
   const fetchCurrentPrice = useCallback(async () => {
     const priceUrl = `${COINGECKO_API}/simple/price?ids=${coin}&vs_currencies=usd&include_24hr_change=true`;
 
-    for (const proxy of CORS_PROXIES) {
-      try {
-        const proxyUrl = proxy.includes('?')
-          ? `${proxy}${encodeURIComponent(priceUrl)}`
-          : `${proxy}${priceUrl}`;
-
-        const response = await fetch(proxyUrl, {
-          headers: { 'Accept': 'application/json' },
-          signal: AbortSignal.timeout(5000),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data[coin]) {
-            return {
-              price: Math.round(data[coin].usd),
-              change24h: data[coin].usd_24h_change,
-            };
-          }
-        }
-      } catch {
-        continue;
+    try {
+      const data = await fetchWithProxyRace(priceUrl);
+      if (data[coin]) {
+        return {
+          price: Math.round(data[coin].usd),
+          change24h: data[coin].usd_24h_change,
+        };
       }
+    } catch {
+      // All proxies failed
     }
     return null;
   }, [coin]);
 
-  const fetchPriceData = useCallback(async () => {
-    let gotLivePrice = false;
+  // Fetch historical data (races all proxies)
+  const fetchHistoricalData = useCallback(async () => {
+    const apiUrl = `${COINGECKO_API}/coins/${coin}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
 
     try {
-      // Fetch current price first (separate, more reliable call)
-      const livePrice = await fetchCurrentPrice();
-      if (livePrice) {
-        setCurrentPrice(livePrice);
+      const data = await fetchWithProxyRace(apiUrl, 5000); // Slightly longer for historical
+      if (data.prices && data.prices.length > 0) {
+        return data;
+      }
+    } catch {
+      // All proxies failed
+    }
+    return null;
+  }, [coin, days]);
+
+  const fetchPriceData = useCallback(async () => {
+    // Prevent duplicate requests
+    if (isFetching.current) return;
+    isFetching.current = true;
+
+    let gotLivePrice = false;
+    let gotHistoricalData = false;
+
+    try {
+      // PARALLEL: Fetch both current price and historical data simultaneously
+      const [priceResult, historyResult] = await Promise.allSettled([
+        fetchCurrentPrice(),
+        fetchHistoricalData(),
+      ]);
+
+      // Process current price result
+      if (priceResult.status === 'fulfilled' && priceResult.value) {
+        setCurrentPrice(priceResult.value);
         setIsLive(true);
         gotLivePrice = true;
       }
 
-      // Try to fetch historical data from CoinGecko via CORS proxies
-      const apiUrl = `${COINGECKO_API}/coins/${coin}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+      // Process historical data result
+      if (historyResult.status === 'fulfilled' && historyResult.value) {
+        const historyData = historyResult.value;
 
-      let historyData = null;
+        // Process price data into monthly averages
+        const monthlyPrices = {};
+        historyData.prices.forEach(([timestamp, price]) => {
+          const date = new Date(timestamp);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-      // Try each proxy until one works
-      for (const proxy of CORS_PROXIES) {
-        try {
-          const proxyUrl = proxy.includes('?')
-            ? `${proxy}${encodeURIComponent(apiUrl)}`
-            : `${proxy}${apiUrl}`;
+          if (!monthlyPrices[monthKey]) {
+            monthlyPrices[monthKey] = { sum: 0, count: 0 };
+          }
+          monthlyPrices[monthKey].sum += price;
+          monthlyPrices[monthKey].count++;
+        });
 
-          const response = await fetch(proxyUrl, {
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(10000), // 10 second timeout
-          });
+        // Convert to array format
+        const processed = Object.entries(monthlyPrices)
+          .map(([month, data]) => ({
+            month,
+            price: Math.round(data.sum / data.count),
+          }))
+          .sort((a, b) => a.month.localeCompare(b.month));
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.prices && data.prices.length > 0) {
-              historyData = data;
-              break;
+        if (processed.length > 0) {
+          setPriceData(processed);
+          gotHistoricalData = true;
+
+          // Use historical latest price as fallback if live price failed
+          if (!gotLivePrice) {
+            const latestPrice = historyData.prices[historyData.prices.length - 1];
+            if (latestPrice) {
+              setCurrentPrice({
+                price: Math.round(latestPrice[1]),
+                change24h: null,
+              });
             }
+            setIsLive(true);
           }
-        } catch (proxyErr) {
-          continue;
+
+          // Cache successful data
+          saveToCache(processed, priceResult.value || { price: Math.round(historyData.prices[historyData.prices.length - 1][1]), change24h: null });
         }
       }
 
-      if (!historyData) {
-        throw new Error('All proxies failed');
-      }
+      // If historical data failed, use fallback
+      if (!gotHistoricalData) {
+        setPriceData(FALLBACK_ARRAY);
 
-      // Process price data into monthly averages
-      const monthlyPrices = {};
-      historyData.prices.forEach(([timestamp, price]) => {
-        const date = new Date(timestamp);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-        if (!monthlyPrices[monthKey]) {
-          monthlyPrices[monthKey] = { sum: 0, count: 0 };
-        }
-        monthlyPrices[monthKey].sum += price;
-        monthlyPrices[monthKey].count++;
-      });
-
-      // Convert to array format
-      const processed = Object.entries(monthlyPrices)
-        .map(([month, data]) => ({
-          month,
-          price: Math.round(data.sum / data.count),
-        }))
-        .sort((a, b) => a.month.localeCompare(b.month));
-
-      if (processed.length > 0) {
-        setPriceData(processed);
         if (!gotLivePrice) {
-          // Only use historical price if live price fetch failed
-          const latestPrice = historyData.prices[historyData.prices.length - 1];
-          if (latestPrice) {
-            setCurrentPrice({
-              price: Math.round(latestPrice[1]),
-              change24h: null,
-            });
-          }
-          setIsLive(true);
+          const latestMonth = Object.keys(FALLBACK_PRICES).sort().pop();
+          setCurrentPrice({
+            price: FALLBACK_PRICES[latestMonth],
+            change24h: null,
+          });
         }
-
-        setLastUpdated(new Date());
-        setError(null);
-        setLoading(false);
-        return;
       }
 
-      throw new Error('No price data returned');
+      setIsLive(gotLivePrice || gotHistoricalData);
+      setLastUpdated(new Date());
+      setError(null);
 
     } catch (err) {
-      // Use fallback static data for historical chart
-      const fallbackArray = Object.entries(FALLBACK_PRICES)
-        .map(([month, price]) => ({ month, price }))
-        .sort((a, b) => a.month.localeCompare(b.month));
-
-      setPriceData(fallbackArray);
-
-      // Only use fallback price if we didn't get a live price
-      if (!gotLivePrice) {
-        const latestMonth = Object.keys(FALLBACK_PRICES).sort().pop();
-        setCurrentPrice({
-          price: FALLBACK_PRICES[latestMonth],
-          change24h: null,
-        });
-      }
-      setIsLive(gotLivePrice);
+      // Complete failure - use fallback
+      setPriceData(FALLBACK_ARRAY);
+      const latestMonth = Object.keys(FALLBACK_PRICES).sort().pop();
+      setCurrentPrice({
+        price: FALLBACK_PRICES[latestMonth],
+        change24h: null,
+      });
+      setIsLive(false);
       setLastUpdated(new Date());
       setError(null);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
-  }, [coin, days, fetchCurrentPrice]);
+  }, [fetchCurrentPrice, fetchHistoricalData]);
 
-  // Initial fetch
+  // Initial fetch (skip if we have valid cache)
   useEffect(() => {
-    fetchPriceData();
+    const cached = loadFromCache();
+    if (!cached) {
+      fetchPriceData();
+    } else {
+      // Still fetch in background to update cache
+      fetchPriceData();
+    }
   }, [fetchPriceData]);
 
   // Auto-refresh (default 5 minutes)
