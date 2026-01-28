@@ -4,8 +4,18 @@ import { format, parseISO } from 'date-fns';
 // Colors for bars
 const COLORS = ['#1d4ed8', '#2563eb', '#3b82f6', '#0369a1', '#0891b2', '#0d9488', '#059669'];
 
-// Fraud keywords for detection
-const FRAUD_KEYWORDS = ['scam', 'fraud', 'stolen', 'hacked', 'unauthorized', 'phishing'];
+// Fraud keywords for detection (matches textAnalysis.js)
+const FRAUD_KEYWORDS = [
+  'scam', 'scammed', 'scammer',
+  'fraud', 'fraudulent', 'defrauded',
+  'stolen', 'stole', 'stealing', 'theft',
+  'hacked', 'hack', 'hacker', 'hacking',
+  'unauthorized', 'unauthorised',
+  'phishing', 'phished',
+  'fake', 'impersonator', 'impersonation',
+  'identity theft', 'criminals', 'criminal',
+  'compromised', 'breached'
+];
 
 export function CompanyComparison({ data, rawData = [] }) {
   const [sortBy, setSortBy] = useState('total');
@@ -82,8 +92,14 @@ export function CompanyComparison({ data, rawData = [] }) {
   // Sort data
   const sortedData = useMemo(() => {
     return [...enhancedData].sort((a, b) => {
-      const aVal = a[sortBy] || 0;
-      const bVal = b[sortBy] || 0;
+      const aVal = a[sortBy] ?? 0;
+      const bVal = b[sortBy] ?? 0;
+      // Handle string comparison (company names) vs numeric comparison
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortOrder === 'desc'
+          ? bVal.localeCompare(aVal)
+          : aVal.localeCompare(bVal);
+      }
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
   }, [enhancedData, sortBy, sortOrder]);
