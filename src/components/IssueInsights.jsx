@@ -2,6 +2,49 @@ import { useMemo, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { getComplaintsWithNarratives } from '../utils/textAnalysis';
 
+// SVG Icon components
+const LockIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+  </svg>
+);
+
+const ClipboardIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+  </svg>
+);
+
+const ArrowUpTrayIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+  </svg>
+);
+
+const ChatBubbleIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+  </svg>
+);
+
+const ExclamationTriangleIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+  </svg>
+);
+
+const CurrencyDollarIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const DocumentTextIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+  </svg>
+);
+
 // Issue patterns with descriptions for QC analysts
 // Keywords are ordered by specificity - more specific phrases first
 const ISSUE_PATTERNS = [
@@ -18,7 +61,7 @@ const ISSUE_PATTERNS = [
       'cant login', 'cannot login', 'login issue',
       'access denied', 'no access'
     ],
-    icon: '🔒',
+    Icon: LockIcon,
     actionable: 'Review account verification and unlock procedures',
     color: 'blue',
     barClass: 'bg-blue-500',
@@ -37,7 +80,7 @@ const ISSUE_PATTERNS = [
       'ssn', 'social security',
       'rejected', 'failed verification'
     ],
-    icon: '📋',
+    Icon: ClipboardIcon,
     actionable: 'Streamline KYC process, improve document requirements clarity',
     color: 'purple',
     barClass: 'bg-purple-500',
@@ -55,7 +98,7 @@ const ISSUE_PATTERNS = [
       'cant get my money', 'wont release',
       'holding my funds', 'held hostage'
     ],
-    icon: '💸',
+    Icon: ArrowUpTrayIcon,
     actionable: 'Review withdrawal processing times and limits',
     color: 'emerald',
     barClass: 'bg-emerald-500',
@@ -74,7 +117,7 @@ const ISSUE_PATTERNS = [
       'unhelpful', 'useless', 'runaround',
       'automated', 'bot', 'generic response'
     ],
-    icon: '📞',
+    Icon: ChatBubbleIcon,
     actionable: 'Improve response SLAs and ticket routing',
     color: 'amber',
     barClass: 'bg-amber-500',
@@ -95,7 +138,7 @@ const ISSUE_PATTERNS = [
       'compromised', 'breached',
       'someone accessed', 'not me', 'didnt authorize'
     ],
-    icon: '⚠️',
+    Icon: ExclamationTriangleIcon,
     actionable: 'Enhance fraud detection and recovery procedures',
     color: 'red',
     barClass: 'bg-red-500',
@@ -114,7 +157,7 @@ const ISSUE_PATTERNS = [
       'converted', 'conversion fee',
       'unexpected charge', 'surprise fee'
     ],
-    icon: '💰',
+    Icon: CurrencyDollarIcon,
     actionable: 'Improve fee transparency and disclosure',
     color: 'teal',
     barClass: 'bg-teal-500',
@@ -124,7 +167,7 @@ const ISSUE_PATTERNS = [
     id: 'other',
     label: 'Other Issues',
     keywords: [],
-    icon: '📝',
+    Icon: DocumentTextIcon,
     actionable: 'Review for emerging issue patterns',
     color: 'gray',
     barClass: 'bg-gray-400',
@@ -278,7 +321,7 @@ export function IssueInsights({ data, onFilterByKeyword }) {
           >
             <div className="flex items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base sm:text-lg flex-shrink-0">{pattern.icon}</span>
+                <pattern.Icon className={`w-5 h-5 flex-shrink-0 ${pattern.textClass}`} />
                 <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white truncate">
                   {pattern.label}
                 </span>
@@ -312,7 +355,7 @@ export function IssueInsights({ data, onFilterByKeyword }) {
             <div className="p-4 border-b dark:border-gray-700 flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{selectedPattern.icon}</span>
+                  <selectedPattern.Icon className={`w-6 h-6 ${selectedPattern.textClass}`} />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {selectedPattern.label}
                   </h3>

@@ -119,8 +119,22 @@ export function CompanyComparison({ data, rawData = [] }) {
 
   // Sort indicator
   const SortIcon = ({ column }) => {
-    if (sortBy !== column) return <span className="text-gray-300 dark:text-gray-600 ml-1">↕</span>;
-    return <span className="text-blue-500 ml-1">{sortOrder === 'desc' ? '↓' : '↑'}</span>;
+    if (sortBy !== column) {
+      return (
+        <svg className="w-3.5 h-3.5 ml-1 text-gray-300 dark:text-gray-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortOrder === 'desc' ? (
+      <svg className="w-3.5 h-3.5 ml-1 text-blue-500 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    ) : (
+      <svg className="w-3.5 h-3.5 ml-1 text-blue-500 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    );
   };
 
   if (!data || data.length === 0) {
