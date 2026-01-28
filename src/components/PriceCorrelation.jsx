@@ -135,33 +135,36 @@ export function PriceCorrelation({ trendData }) {
   const getTickInterval = (expanded) => {
     const dataLength = chartData.length;
     if (isMobile && !expanded) {
-      // Mobile: show only ~3-4 labels (years only)
-      return Math.max(Math.floor(dataLength / 3), 1);
+      // Mobile compact: show only 2 labels (start and end years)
+      return Math.max(Math.floor(dataLength / 2), 1);
     }
     if (!expanded) {
       // Desktop compact: show ~5-6 labels
       return Math.max(Math.floor(dataLength / 5), 1);
     }
-    // Expanded view: show ~12-15 labels
+    if (isMobile && expanded) {
+      // Mobile expanded: show ~4 labels
+      return Math.max(Math.floor(dataLength / 4), 1);
+    }
+    // Desktop expanded view: show ~12-15 labels
     return Math.max(Math.floor(dataLength / 12), 1);
   };
 
-  // Custom tick formatter - show year on January, abbreviated month otherwise
-  const formatXAxisTick = (value, index) => {
+  // Custom tick formatter - clean abbreviated format
+  const formatXAxisTick = (value) => {
     if (!value) return '';
     // value is like "Jan 2019" or "Dec 2024"
     const parts = value.split(' ');
     if (parts.length !== 2) return value;
     const [month, year] = parts;
-    // For January or if it's the first/last visible, show "Jan '19" format
-    if (month === 'Jan') {
-      return `'${year.slice(2)}`;
+    const shortYear = `'${year.slice(2)}`;
+
+    // Mobile compact: just show year
+    if (isMobile && !isExpanded) {
+      return shortYear;
     }
-    // For expanded view, show "Mar" style
-    if (isExpanded) {
-      return month;
-    }
-    return `'${year.slice(2)}`;
+    // Mobile expanded or desktop: show "Jan '19" format
+    return `${month} ${shortYear}`;
   };
 
   const ChartContent = ({ height = 288, showEventMarkers = true }) => (
@@ -169,36 +172,36 @@ export function PriceCorrelation({ trendData }) {
       <ComposedChart
         data={chartData}
         margin={isMobile && !isExpanded
-          ? { top: 10, right: 35, left: 0, bottom: 0 }
+          ? { top: 5, right: 5, left: -15, bottom: 0 }
           : { top: 20, right: 45, left: 20, bottom: 5 }
         }
       >
         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: isMobile ? 10 : 11, fill: chartColors.tickText, fontWeight: 500 }}
+          tick={{ fontSize: isMobile && !isExpanded ? 9 : 11, fill: chartColors.tickText, fontWeight: 500 }}
           tickLine={false}
           interval={getTickInterval(isExpanded)}
           angle={0}
           textAnchor="middle"
-          height={25}
+          height={isMobile && !isExpanded ? 20 : 25}
           tickFormatter={formatXAxisTick}
         />
         <YAxis
           yAxisId="left"
-          tick={{ fontSize: isMobile ? 9 : 11, fill: chartColors.tickText, fontWeight: 500 }}
+          tick={isMobile && !isExpanded ? false : { fontSize: 11, fill: chartColors.tickText, fontWeight: 500 }}
           tickLine={false}
           axisLine={false}
-          width={isMobile ? 30 : 50}
+          width={isMobile && !isExpanded ? 5 : 50}
           label={!isMobile || isExpanded ? { value: 'Complaints', angle: -90, position: 'insideLeft', fontSize: 11, fill: chartColors.axisLabel, fontWeight: 600 } : undefined}
         />
         <YAxis
           yAxisId="right"
           orientation="right"
-          tick={{ fontSize: isMobile ? 9 : 11, fill: chartColors.tickText, fontWeight: 500 }}
+          tick={isMobile && !isExpanded ? false : { fontSize: 11, fill: chartColors.tickText, fontWeight: 500 }}
           tickLine={false}
           axisLine={false}
-          width={isMobile ? 35 : 50}
+          width={isMobile && !isExpanded ? 5 : 50}
           tickFormatter={(value) => `$${value}k`}
           label={!isMobile || isExpanded ? { value: 'BTC Price', angle: 90, position: 'insideRight', fontSize: 11, fill: chartColors.axisLabel, fontWeight: 600 } : undefined}
         />
@@ -215,7 +218,7 @@ export function PriceCorrelation({ trendData }) {
             return [value, name];
           }}
         />
-        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+        {(!isMobile || isExpanded) && <Legend wrapperStyle={{ fontSize: 12 }} />}
 
         {/* Complaint volume bars */}
         <Bar
@@ -359,20 +362,33 @@ export function PriceCorrelation({ trendData }) {
           </div>
         </div>
 
-        <div className="h-56 sm:h-72">
+        {/* Mobile-only mini legend */}
+        {isMobile && (
+          <div className="flex justify-center gap-4 mb-1 text-[10px]">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-blue-500 rounded-sm opacity-70"></span>
+              <span className="text-gray-600 dark:text-gray-400">Complaints</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+              <span className="text-gray-600 dark:text-gray-400">BTC Price</span>
+            </span>
+          </div>
+        )}
+        <div className="h-48 sm:h-72">
           <ChartContent />
         </div>
 
         {/* Clickable Event Tags - Compact horizontal scroll */}
-        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700/50">
+        <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700/50">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-200 flex-shrink-0">Events:</span>
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-              {relevantEvents.slice(0, 10).map((event, i) => (
+            <span className="text-xs text-gray-600 dark:text-gray-200 flex-shrink-0 hidden sm:inline">Events:</span>
+            <div className="flex gap-1 sm:gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+              {relevantEvents.slice(0, isMobile ? 6 : 10).map((event, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedEvent(event)}
-                  className={`inline-flex items-center px-2 py-0.5 text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer active:brightness-90 transition-all ${
+                  className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer active:brightness-90 transition-all ${
                     event.type === 'crash'
                       ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
                       : event.type === 'positive'
