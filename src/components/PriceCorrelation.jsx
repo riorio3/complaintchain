@@ -166,7 +166,7 @@ export function PriceCorrelation({ trendData }) {
       <ComposedChart
         data={chartData}
         margin={isMobile && !isExpanded
-          ? { top: 5, right: 5, left: 0, bottom: 0 }
+          ? { top: 5, right: 5, left: 0, bottom: 20 }
           : { top: 20, right: 45, left: 20, bottom: 5 }
         }
       >
@@ -178,7 +178,7 @@ export function PriceCorrelation({ trendData }) {
           interval={getTickInterval(isExpanded)}
           angle={0}
           textAnchor="middle"
-          height={isMobile && !isExpanded ? 18 : 30}
+          height={isMobile && !isExpanded ? 20 : 30}
           tickFormatter={formatXAxisTick}
         />
         <YAxis
@@ -361,7 +361,7 @@ export function PriceCorrelation({ trendData }) {
           </div>
         </div>
 
-        <div className="h-44 sm:h-72 overflow-hidden">
+        <div className="h-48 sm:h-72 overflow-hidden">
           <ChartContent />
         </div>
 
