@@ -17,7 +17,7 @@
 - [Why ComplaintChain?](#why-complaintchain)
 - [Features](#features)
 - [Key Insights](#key-insights)
-- [Tech Stack](#built-with)
+- [Built With](#built-with)
 - [Quick Start](#quick-start)
 - [Data Sources](#data-sources)
 - [Contributing](#contributing)
