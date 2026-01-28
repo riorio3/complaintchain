@@ -180,6 +180,7 @@ export function IssueInsights({ data, onFilterByKeyword }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAllModal, setShowAllModal] = useState(false);
   const [selectedAllComplaint, setSelectedAllComplaint] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(50); // Pagination for View All modal
 
   // Analyze complaints for each pattern with 30-day trend (exclusive categorization)
   const patternAnalysis = useMemo(() => {
@@ -439,7 +440,7 @@ export function IssueInsights({ data, onFilterByKeyword }) {
               </button>
             </div>
 
-            {/* Modal Body - Scrollable List */}
+            {/* Modal Body - Scrollable List with Pagination */}
             <div className="flex-1 overflow-y-auto p-4">
               {data.length === 0 ? (
                 <p className="text-center text-gray-500 dark:text-gray-400 py-8">No complaints found</p>
@@ -447,6 +448,7 @@ export function IssueInsights({ data, onFilterByKeyword }) {
                 <div className="space-y-3">
                   {[...data]
                     .sort((a, b) => (b.date_received || '').localeCompare(a.date_received || ''))
+                    .slice(0, visibleCount)
                     .map((complaint, index) => (
                       <AllComplaintCard
                         key={complaint.complaint_id || index}
@@ -455,6 +457,14 @@ export function IssueInsights({ data, onFilterByKeyword }) {
                         onViewDetails={() => setSelectedAllComplaint(complaint)}
                       />
                     ))}
+                  {visibleCount < data.length && (
+                    <button
+                      onClick={() => setVisibleCount(prev => prev + 50)}
+                      className="w-full py-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                    >
+                      Load More ({Math.min(50, data.length - visibleCount)} more of {data.length - visibleCount} remaining)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -462,10 +472,10 @@ export function IssueInsights({ data, onFilterByKeyword }) {
             {/* Modal Footer */}
             <div className="p-4 border-t dark:border-gray-700 flex justify-between items-center">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Sorted by date (newest first)
+                Showing {Math.min(visibleCount, data.length)} of {data.length} (newest first)
               </p>
               <button
-                onClick={() => setShowAllModal(false)}
+                onClick={() => { setShowAllModal(false); setVisibleCount(50); }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Close

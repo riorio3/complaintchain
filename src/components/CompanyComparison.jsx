@@ -156,8 +156,7 @@ export function CompanyComparison({ data, rawData = [] }) {
           </p>
         </div>
         <div className="text-xs text-gray-400 dark:text-gray-500">
-          <span className="hidden sm:inline">{sortedData.length} companies</span>
-          <span className="sm:hidden">{sortedData.length}</span>
+          {sortedData.length} companies
         </div>
       </div>
 
