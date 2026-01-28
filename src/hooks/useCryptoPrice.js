@@ -39,7 +39,7 @@ const FALLBACK_PRICES = {
   '2025-05': 103000, '2025-06': 106000, '2025-07': 97000, '2025-08': 59000,
   '2025-09': 63000, '2025-10': 69000, '2025-11': 96000, '2025-12': 94000,
   // 2026 - Current Year
-  '2026-01': 87000,
+  '2026-01': 102000,
 };
 
 export function useCryptoPrice(coin = 'bitcoin', days = 2555, refreshInterval = 300000) {
@@ -50,8 +50,46 @@ export function useCryptoPrice(coin = 'bitcoin', days = 2555, refreshInterval = 
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isLive, setIsLive] = useState(false);
 
+  // Fetch current price from simple endpoint (more reliable)
+  const fetchCurrentPrice = useCallback(async () => {
+    const priceUrl = `${COINGECKO_API}/simple/price?ids=${coin}&vs_currencies=usd&include_24hr_change=true`;
+
+    for (const proxy of CORS_PROXIES) {
+      try {
+        const proxyUrl = proxy.includes('?')
+          ? `${proxy}${encodeURIComponent(priceUrl)}`
+          : `${proxy}${priceUrl}`;
+
+        const response = await fetch(proxyUrl, {
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(5000),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data[coin]) {
+            return {
+              price: Math.round(data[coin].usd),
+              change24h: data[coin].usd_24h_change,
+            };
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }, [coin]);
+
   const fetchPriceData = useCallback(async () => {
     try {
+      // Fetch current price first (separate, more reliable call)
+      const livePrice = await fetchCurrentPrice();
+      if (livePrice) {
+        setCurrentPrice(livePrice);
+        setIsLive(true);
+      }
+
       // Try to fetch historical data from CoinGecko via CORS proxies
       const apiUrl = `${COINGECKO_API}/coins/${coin}/market_chart?vs_currency=usd&days=${days}&interval=daily`;
 
@@ -108,15 +146,16 @@ export function useCryptoPrice(coin = 'bitcoin', days = 2555, refreshInterval = 
 
       if (processed.length > 0) {
         setPriceData(processed);
-        setIsLive(true);
-
-        // Get current price from the latest data point
-        const latestPrice = historyData.prices[historyData.prices.length - 1];
-        if (latestPrice) {
-          setCurrentPrice({
-            price: Math.round(latestPrice[1]),
-            change24h: null,
-          });
+        if (!livePrice) {
+          // Only use historical price if live price fetch failed
+          const latestPrice = historyData.prices[historyData.prices.length - 1];
+          if (latestPrice) {
+            setCurrentPrice({
+              price: Math.round(latestPrice[1]),
+              change24h: null,
+            });
+          }
+          setIsLive(true);
         }
 
         setLastUpdated(new Date());
@@ -128,26 +167,28 @@ export function useCryptoPrice(coin = 'bitcoin', days = 2555, refreshInterval = 
       throw new Error('No price data returned');
 
     } catch (err) {
-      // Use fallback static data
+      // Use fallback static data for historical chart
       const fallbackArray = Object.entries(FALLBACK_PRICES)
         .map(([month, price]) => ({ month, price }))
         .sort((a, b) => a.month.localeCompare(b.month));
 
       setPriceData(fallbackArray);
 
-      // Get the most recent month from fallback data
-      const latestMonth = Object.keys(FALLBACK_PRICES).sort().pop();
-      setCurrentPrice({
-        price: FALLBACK_PRICES[latestMonth],
-        change24h: null,
-      });
-      setIsLive(false);
+      // Only use fallback price if we didn't get a live price
+      if (!currentPrice) {
+        const latestMonth = Object.keys(FALLBACK_PRICES).sort().pop();
+        setCurrentPrice({
+          price: FALLBACK_PRICES[latestMonth],
+          change24h: null,
+        });
+      }
+      setIsLive(currentPrice !== null);
       setLastUpdated(new Date());
       setError(null);
     } finally {
       setLoading(false);
     }
-  }, [coin, days]);
+  }, [coin, days, fetchCurrentPrice, currentPrice]);
 
   // Initial fetch
   useEffect(() => {
