@@ -165,8 +165,8 @@ export function PriceCorrelation({ trendData }) {
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart
         data={chartData}
-        margin={isMobile && !isExpanded
-          ? { top: 5, right: 5, left: 0, bottom: 20 }
+        margin={isMobile
+          ? (isExpanded ? { top: 10, right: 30, left: 10, bottom: 5 } : { top: 5, right: 5, left: 0, bottom: 20 })
           : { top: 20, right: 45, left: 20, bottom: 5 }
         }
       >
@@ -365,17 +365,17 @@ export function PriceCorrelation({ trendData }) {
           <ChartContent />
         </div>
 
-        {/* Clickable Event Tags - Desktop only */}
+        {/* Clickable Event Tags - Desktop only, newest first */}
         {!isMobile && (
           <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700/50">
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-600 dark:text-gray-200 flex-shrink-0">Events:</span>
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-                {[...relevantEvents].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 10).map((event, i) => (
+                {[...relevantEvents].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8).map((event, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedEvent(event)}
-                    className={`inline-flex items-center px-2 py-0.5 text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer active:brightness-90 transition-all ${
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer active:brightness-90 transition-all ${
                       event.type === 'crash'
                         ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
                         : event.type === 'positive'
@@ -383,7 +383,8 @@ export function PriceCorrelation({ trendData }) {
                         : 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400'
                     }`}
                   >
-                    {format(parseISO(event.date), "MMM ''yy")}
+                    <span className="opacity-70">{format(parseISO(event.date), "MMM ''yy")}</span>
+                    <span className="max-w-[120px] truncate">{event.event}</span>
                   </button>
                 ))}
               </div>
@@ -399,37 +400,37 @@ export function PriceCorrelation({ trendData }) {
 
       {/* Expanded Chart Modal */}
       {isExpanded && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-3 py-2 sm:p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white">
                   BTC Price vs Complaint Volume
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   Expanded view
                   {currentPrice && (
-                    <span className="ml-2">| Current BTC: <span className="font-medium">${currentPrice.price?.toLocaleString()}</span></span>
+                    <span className="ml-1 sm:ml-2">| BTC: <span className="font-medium">${currentPrice.price?.toLocaleString()}</span></span>
                   )}
                 </p>
               </div>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="p-1.5 sm:p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-6">
-              <div className="h-[500px]">
+            <div className="p-2 sm:p-4">
+              <div className="h-[60vh] sm:h-[50vh] landscape:h-[55vh]">
                 <ChartContent showEventMarkers={true} />
               </div>
 
-              {/* Interactive Event Legend */}
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-3">
+              {/* Interactive Event Legend - Hidden on mobile */}
+              <div className="hidden sm:block mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                     Chart Events ({relevantEvents.length} shown)
                   </h3>
@@ -445,7 +446,7 @@ export function PriceCorrelation({ trendData }) {
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 max-h-64 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto">
                   {relevantEvents
                     .sort((a, b) => new Date(a.date) - new Date(b.date))
                     .map((event, i) => (

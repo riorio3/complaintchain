@@ -91,11 +91,12 @@ export function Dashboard() {
         <div className="max-w-7xl mx-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
                 ComplaintChain
               </h1>
-              <p className="text-[10px] sm:text-sm text-blue-600 dark:text-blue-400 font-medium">
-                Crypto Complaint Intelligence
+              <p className="text-[9px] sm:text-sm font-medium leading-tight">
+                <span className="text-blue-600 dark:text-blue-400">Crypto Complaint Intelligence</span>
+                <span className="text-gray-400 dark:text-gray-500"> · Built by Rio</span>
               </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
