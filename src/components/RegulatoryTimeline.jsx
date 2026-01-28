@@ -77,7 +77,7 @@ export function RegulatoryTimeline() {
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
             SEC, DOJ, CFTC enforcement + crypto news
             {lastUpdated && (
-              <span className="ml-1 sm:ml-2 text-xs text-gray-400">
+              <span className="block sm:inline sm:ml-2 text-xs text-gray-400">
                 Updated {formatTime(lastUpdated)}
               </span>
             )}

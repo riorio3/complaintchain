@@ -144,12 +144,12 @@ function StateHeatmap({ data, selectedState, onStateClick }) {
       {/* Top States */}
       <div className="mt-4 border-t dark:border-gray-700 pt-4">
         <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Top States:</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {topStates.map(([state, count]) => (
             <button
               key={state}
               onClick={() => onStateClick(state === selectedState ? null : state)}
-              className={`inline-flex items-center px-2 py-1 text-xs rounded ${
+              className={`w-full text-center px-2 py-1 text-xs rounded ${
                 state === selectedState
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
