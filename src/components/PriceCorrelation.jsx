@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import {
   ComposedChart,
@@ -22,6 +22,23 @@ export function PriceCorrelation({ trendData }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [hoveredEvent, setHoveredEvent] = useState(null);
+  const hoverTimeoutRef = useRef(null);
+
+  // Debounced hover to prevent glitchy transitions
+  const handleEventHover = useCallback((event) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    if (event) {
+      // Immediate set for entering
+      setHoveredEvent(event);
+    } else {
+      // Small delay for leaving to allow transition to next event
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHoveredEvent(null);
+      }, 50);
+    }
+  }, []);
 
   // Dynamic colors for chart based on theme
   const chartColors = {
@@ -112,8 +129,8 @@ export function PriceCorrelation({ trendData }) {
             e.stopPropagation();
             setSelectedEvent(event);
           }}
-          onMouseEnter={() => setHoveredEvent(event)}
-          onMouseLeave={() => setHoveredEvent(null)}
+          onMouseEnter={() => handleEventHover(event)}
+          onMouseLeave={() => handleEventHover(null)}
         />
         <title>{`${format(parseISO(event.date), 'MMM yyyy')}: ${event.event}`}</title>
       </g>
@@ -415,8 +432,8 @@ export function PriceCorrelation({ trendData }) {
                   <button
                     key={i}
                     onClick={() => setSelectedEvent(event)}
-                    onMouseEnter={() => setHoveredEvent(event)}
-                    onMouseLeave={() => setHoveredEvent(null)}
+                    onMouseEnter={() => handleEventHover(event)}
+                    onMouseLeave={() => handleEventHover(null)}
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer transition-all ${
                       hoveredEvent === event
                         ? 'ring-2 ring-offset-1 ring-blue-500 scale-105'
@@ -499,8 +516,8 @@ export function PriceCorrelation({ trendData }) {
                     <button
                       key={i}
                       onClick={() => setSelectedEvent(event)}
-                      onMouseEnter={() => setHoveredEvent(event)}
-                      onMouseLeave={() => setHoveredEvent(null)}
+                      onMouseEnter={() => handleEventHover(event)}
+                      onMouseLeave={() => handleEventHover(null)}
                       className={`p-1.5 sm:p-2 rounded text-left transition-all border ${
                         hoveredEvent === event
                           ? 'ring-2 ring-blue-500 border-transparent'
