@@ -135,16 +135,16 @@ export function PriceCorrelation({ trendData }) {
   const getTickInterval = (expanded) => {
     const dataLength = chartData.length;
     if (isMobile && !expanded) {
-      // Mobile compact: show only 2 labels (start and end years)
-      return Math.max(Math.floor(dataLength / 2), 1);
+      // Mobile compact: show ~4-5 labels max
+      return Math.max(Math.floor(dataLength / 4), 1);
     }
     if (!expanded) {
       // Desktop compact: show ~5-6 labels
       return Math.max(Math.floor(dataLength / 5), 1);
     }
     if (isMobile && expanded) {
-      // Mobile expanded: show ~4 labels
-      return Math.max(Math.floor(dataLength / 4), 1);
+      // Mobile expanded: show ~6 labels
+      return Math.max(Math.floor(dataLength / 6), 1);
     }
     // Desktop expanded view: show ~12-15 labels
     return Math.max(Math.floor(dataLength / 12), 1);
@@ -156,15 +156,9 @@ export function PriceCorrelation({ trendData }) {
     // value is like "Jan 2019" or "Dec 2024"
     const parts = value.split(' ');
     if (parts.length !== 2) return value;
-    const [month, year] = parts;
-    const shortYear = `'${year.slice(2)}`;
-
-    // Mobile compact: just show year
-    if (isMobile && !isExpanded) {
-      return shortYear;
-    }
-    // Mobile expanded or desktop: show "Jan '19" format
-    return `${month} ${shortYear}`;
+    const [, year] = parts;
+    // Always show just the year for cleaner look
+    return `'${year.slice(2)}`;
   };
 
   const ChartContent = ({ height = 288, showEventMarkers = true }) => (
@@ -172,19 +166,19 @@ export function PriceCorrelation({ trendData }) {
       <ComposedChart
         data={chartData}
         margin={isMobile && !isExpanded
-          ? { top: 5, right: 5, left: -15, bottom: 0 }
+          ? { top: 10, right: 10, left: 10, bottom: 5 }
           : { top: 20, right: 45, left: 20, bottom: 5 }
         }
       >
         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: isMobile && !isExpanded ? 9 : 11, fill: chartColors.tickText, fontWeight: 500 }}
+          tick={{ fontSize: isMobile && !isExpanded ? 10 : 11, fill: chartColors.tickText, fontWeight: 500 }}
           tickLine={false}
           interval={getTickInterval(isExpanded)}
           angle={0}
           textAnchor="middle"
-          height={isMobile && !isExpanded ? 20 : 25}
+          height={30}
           tickFormatter={formatXAxisTick}
         />
         <YAxis
@@ -192,7 +186,7 @@ export function PriceCorrelation({ trendData }) {
           tick={isMobile && !isExpanded ? false : { fontSize: 11, fill: chartColors.tickText, fontWeight: 500 }}
           tickLine={false}
           axisLine={false}
-          width={isMobile && !isExpanded ? 5 : 50}
+          width={isMobile && !isExpanded ? 1 : 50}
           label={!isMobile || isExpanded ? { value: 'Complaints', angle: -90, position: 'insideLeft', fontSize: 11, fill: chartColors.axisLabel, fontWeight: 600 } : undefined}
         />
         <YAxis
@@ -201,7 +195,7 @@ export function PriceCorrelation({ trendData }) {
           tick={isMobile && !isExpanded ? false : { fontSize: 11, fill: chartColors.tickText, fontWeight: 500 }}
           tickLine={false}
           axisLine={false}
-          width={isMobile && !isExpanded ? 5 : 50}
+          width={isMobile && !isExpanded ? 1 : 50}
           tickFormatter={(value) => `$${value}k`}
           label={!isMobile || isExpanded ? { value: 'BTC Price', angle: 90, position: 'insideRight', fontSize: 11, fill: chartColors.axisLabel, fontWeight: 600 } : undefined}
         />
@@ -362,46 +356,35 @@ export function PriceCorrelation({ trendData }) {
           </div>
         </div>
 
-        {/* Mobile-only mini legend */}
-        {isMobile && (
-          <div className="flex justify-center gap-4 mb-1 text-[10px]">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-blue-500 rounded-sm opacity-70"></span>
-              <span className="text-gray-600 dark:text-gray-400">Complaints</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-              <span className="text-gray-600 dark:text-gray-400">BTC Price</span>
-            </span>
-          </div>
-        )}
-        <div className="h-48 sm:h-72">
+        <div className="h-52 sm:h-72">
           <ChartContent />
         </div>
 
-        {/* Clickable Event Tags - Compact horizontal scroll */}
-        <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700/50">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-200 flex-shrink-0 hidden sm:inline">Events:</span>
-            <div className="flex gap-1 sm:gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-              {relevantEvents.slice(0, isMobile ? 6 : 10).map((event, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedEvent(event)}
-                  className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer active:brightness-90 transition-all ${
-                    event.type === 'crash'
-                      ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
-                      : event.type === 'positive'
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
-                      : 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400'
-                  }`}
-                >
-                  {format(parseISO(event.date), "MMM ''yy")}
-                </button>
-              ))}
+        {/* Clickable Event Tags - Desktop only */}
+        {!isMobile && (
+          <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700/50">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 dark:text-gray-200 flex-shrink-0">Events:</span>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                {relevantEvents.slice(0, 10).map((event, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedEvent(event)}
+                    className={`inline-flex items-center px-2 py-0.5 text-xs rounded whitespace-nowrap flex-shrink-0 cursor-pointer active:brightness-90 transition-all ${
+                      event.type === 'crash'
+                        ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
+                        : event.type === 'positive'
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                        : 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400'
+                    }`}
+                  >
+                    {format(parseISO(event.date), "MMM ''yy")}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Event Detail Modal */}
