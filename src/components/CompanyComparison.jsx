@@ -182,13 +182,13 @@ export function CompanyComparison({ data, rawData = [] }) {
                 <SortIcon column="total" />
               </th>
               <th
-                className="hidden sm:table-cell px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
+                className="px-2 sm:px-3 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 whitespace-nowrap"
                 onClick={() => handleSort('timelyRate')}
               >
                 Timely % <SortIcon column="timelyRate" />
               </th>
               <th
-                className="hidden md:table-cell px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
+                className="px-2 sm:px-3 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 whitespace-nowrap"
                 onClick={() => handleSort('disputeRate')}
               >
                 Disputed % <SortIcon column="disputeRate" />
@@ -201,7 +201,7 @@ export function CompanyComparison({ data, rawData = [] }) {
                 <span className="sm:hidden">Fraud</span>
                 <SortIcon column="fraudRate" />
               </th>
-              <th className="hidden md:table-cell px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-2 sm:px-3 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
                 <span
                   className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
                   onClick={() => handleSort('reliefRate')}
@@ -273,7 +273,7 @@ export function CompanyComparison({ data, rawData = [] }) {
                     </span>
                   </div>
                 </td>
-                <td className="hidden sm:table-cell px-3 py-3 text-sm text-right">
+                <td className="px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm text-right whitespace-nowrap">
                   <span className={`inline-flex px-2 py-0.5 text-xs font-bold rounded-full ${
                     company.timelyRate >= 90
                       ? 'bg-emerald-600 text-white'
@@ -284,7 +284,7 @@ export function CompanyComparison({ data, rawData = [] }) {
                     {company.timelyRate}%
                   </span>
                 </td>
-                <td className="hidden md:table-cell px-3 py-3 text-sm text-right">
+                <td className="px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm text-right whitespace-nowrap">
                   <span className={`inline-flex px-2 py-0.5 text-xs font-bold rounded-full ${
                     company.disputeRate <= 10
                       ? 'bg-emerald-600 text-white'
@@ -306,7 +306,7 @@ export function CompanyComparison({ data, rawData = [] }) {
                     {company.fraudRate}%
                   </span>
                 </td>
-                <td className="hidden md:table-cell px-3 py-3 text-sm text-right text-gray-700 dark:text-gray-300">
+                <td className="px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   {company.reliefRate}%
                 </td>
                 <td className="px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm text-right">

@@ -102,7 +102,7 @@ export function RegulatoryTimeline() {
       {loading && (
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Fetching latest news...</span>
+          <span className="ml-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">Fetching latest news...</span>
         </div>
       )}
 
@@ -112,7 +112,7 @@ export function RegulatoryTimeline() {
           isExpanded ? 'max-h-[600px]' : 'max-h-64 sm:max-h-80'
         }`}>
           {displayItems.length === 0 ? (
-            <p className="text-center text-gray-600 dark:text-gray-300 py-6 sm:py-8 text-sm">
+            <p className="text-center text-gray-600 dark:text-gray-300 py-6 sm:py-8 text-xs sm:text-sm">
               No regulatory actions found
             </p>
           ) : (
@@ -136,7 +136,7 @@ export function RegulatoryTimeline() {
                       {item.target}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                     {item.description}
                   </p>
                   {item.url && (

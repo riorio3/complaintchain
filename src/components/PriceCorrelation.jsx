@@ -371,7 +371,7 @@ export function PriceCorrelation({ trendData }) {
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-600 dark:text-gray-200 flex-shrink-0">Events:</span>
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-                {relevantEvents.slice(0, 10).map((event, i) => (
+                {[...relevantEvents].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 10).map((event, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedEvent(event)}
