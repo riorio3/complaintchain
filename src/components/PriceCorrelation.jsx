@@ -161,8 +161,8 @@ export function PriceCorrelation({ trendData }) {
     return `'${year.slice(2)}`;
   };
 
-  const ChartContent = ({ height = 288, showEventMarkers = true }) => (
-    <ResponsiveContainer width="100%" height={height}>
+  const ChartContent = ({ showEventMarkers = true }) => (
+    <ResponsiveContainer width="100%" height="100%">
       <ComposedChart
         data={chartData}
         margin={isMobile && !isExpanded
@@ -424,7 +424,7 @@ export function PriceCorrelation({ trendData }) {
             </div>
             <div className="p-6">
               <div className="h-[500px]">
-                <ChartContent height={500} showEventMarkers={true} />
+                <ChartContent showEventMarkers={true} />
               </div>
 
               {/* Interactive Event Legend */}
