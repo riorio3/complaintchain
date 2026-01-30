@@ -18,7 +18,6 @@
 - [Features](#features)
 - [Key Insights](#key-insights)
 - [Built With](#built-with)
-- [Quick Start](#quick-start)
 - [Data Sources](#data-sources)
 - [Contributing](#contributing)
 
@@ -65,24 +64,6 @@ Crypto complaints to the CFPB grew **10x** from 2019-2024, yet this data is buri
 ## Built With
 
 React 18 / Vite / Tailwind CSS / Recharts / Vercel
-
----
-
-## Quick Start
-
-```bash
-# Clone
-git clone https://github.com/riorio3/complaintchain.git
-cd complaintchain
-
-# Install
-npm install
-
-# Run
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173)
 
 ---
 
