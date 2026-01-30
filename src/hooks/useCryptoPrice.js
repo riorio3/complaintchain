@@ -46,7 +46,7 @@ const FALLBACK_PRICES = {
   '2025-05': 103000, '2025-06': 106000, '2025-07': 97000, '2025-08': 59000,
   '2025-09': 63000, '2025-10': 69000, '2025-11': 96000, '2025-12': 94000,
   // 2026 - Current Year
-  '2026-01': 102000,
+  '2026-01': 83000,
 };
 
 // Pre-computed fallback array (optimization: avoid repeated conversion)
