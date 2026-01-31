@@ -1,6 +1,33 @@
+import { useState } from 'react';
+
+const DATE_RANGES = [
+  { label: 'All Time', value: 'all' },
+  { label: '6M', value: '6m' },
+  { label: '1Y', value: '1y' },
+  { label: '2Y', value: '2y' },
+  { label: 'Custom', value: 'custom' },
+];
+
+function getDateFrom(range) {
+  if (range === 'all') return undefined;
+  const now = new Date();
+  const months = range === '6m' ? 6 : range === '1y' ? 12 : 24;
+  now.setMonth(now.getMonth() - months);
+  return now.toISOString().slice(0, 10);
+}
+
 export function Filters({ filters, setFilters, companies, issues }) {
+  const [rangeMode, setRangeMode] = useState('all');
+
   const handleChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleRange = (range) => {
+    setRangeMode(range);
+    if (range === 'custom') return;
+    const dateFrom = getDateFrom(range);
+    setFilters(prev => ({ ...prev, dateFrom, dateTo: undefined }));
   };
 
   const activeFiltersCount = Object.values(filters).filter(v => v && v !== 'all').length;
@@ -40,28 +67,50 @@ export function Filters({ filters, setFilters, companies, issues }) {
           </select>
         </div>
 
-        <div className="col-span-1">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
-          <input
-            type="date"
-            value={filters.dateFrom || ''}
-            onChange={e => handleChange('dateFrom', e.target.value)}
-            className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          />
+        <div className="col-span-2 sm:col-span-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
+          <div className="flex rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
+            {DATE_RANGES.map(r => (
+              <button
+                key={r.value}
+                onClick={() => handleRange(r.value)}
+                className={`flex-1 px-2 py-2 text-xs sm:text-sm font-medium transition-colors ${
+                  rangeMode === r.value
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="col-span-1">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
-          <input
-            type="date"
-            value={filters.dateTo || ''}
-            onChange={e => handleChange('dateTo', e.target.value)}
-            className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          />
-        </div>
+        {rangeMode === 'custom' && (
+          <>
+            <div className="col-span-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
+              <input
+                type="date"
+                value={filters.dateFrom || ''}
+                onChange={e => handleChange('dateFrom', e.target.value)}
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
+              <input
+                type="date"
+                value={filters.dateTo || ''}
+                onChange={e => handleChange('dateTo', e.target.value)}
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+          </>
+        )}
 
         <button
-          onClick={() => setFilters({})}
+          onClick={() => { setFilters({}); setRangeMode('all'); }}
           className="col-span-2 sm:col-span-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
         >
           Reset {activeFiltersCount > 0 && `(${activeFiltersCount})`}

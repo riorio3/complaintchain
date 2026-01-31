@@ -83,6 +83,7 @@ export function CompanyComparison({ data, rawData = [] }) {
         trend,
         trendPercent: Math.abs(trendPercent),
         recentCount,
+        previousCount,
         dateRange,
         complaints: companyComplaints,
       };
@@ -309,9 +310,9 @@ export function CompanyComparison({ data, rawData = [] }) {
                   {company.reliefRate}%
                 </td>
                 <td className="px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm text-right">
-                  {company.trend === 'up' && company.trendPercent < 100 ? (
+                  {company.trend === 'up' && company.recentCount >= 3 ? (
                     <span className="text-red-600 dark:text-red-400 font-semibold">↑{company.trendPercent}%</span>
-                  ) : company.trend === 'down' && company.trendPercent < 100 ? (
+                  ) : company.trend === 'down' && company.recentCount + (company.previousCount || 0) >= 3 ? (
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">↓{company.trendPercent}%</span>
                   ) : (
                     <span className="text-gray-500">—</span>
@@ -404,12 +405,12 @@ export function CompanyComparison({ data, rawData = [] }) {
               <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">30-Day Trend</div>
                 <div className="flex items-center gap-2">
-                  {selectedCompany.trend === 'up' && selectedCompany.trendPercent < 100 ? (
+                  {selectedCompany.trend === 'up' && selectedCompany.recentCount >= 3 ? (
                     <>
                       <span className="text-red-600 dark:text-red-400 text-lg font-bold">↑ {selectedCompany.trendPercent}%</span>
                       <span className="text-sm text-gray-700 dark:text-gray-300">increase in complaints</span>
                     </>
-                  ) : selectedCompany.trend === 'down' && selectedCompany.trendPercent < 100 ? (
+                  ) : selectedCompany.trend === 'down' && selectedCompany.recentCount + (selectedCompany.previousCount || 0) >= 3 ? (
                     <>
                       <span className="text-emerald-600 dark:text-emerald-400 text-lg font-bold">↓ {selectedCompany.trendPercent}%</span>
                       <span className="text-sm text-gray-700 dark:text-gray-300">decrease in complaints</span>
