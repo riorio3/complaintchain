@@ -3,8 +3,9 @@
 /**
  * CFPB Crypto Complaints Data Fetcher
  *
- * Fetches all crypto-related complaints from the CFPB Consumer Complaint Database API.
- * Handles pagination using search_after cursor and outputs in Elasticsearch format.
+ * Incrementally fetches new crypto-related complaints from the CFPB Consumer
+ * Complaint Database API. Merges new complaints into the existing dataset,
+ * deduplicating by complaint ID.
  *
  * Usage: node scripts/fetch-cfpb-data.cjs
  */
@@ -56,10 +57,14 @@ function buildUrl(params = {}) {
   // Also include Virtual currency sub_product
   url.searchParams.append('sub_product', 'Virtual currency');
 
-  // Pagination and format
+  // Pagination
   url.searchParams.set('size', CONFIG.PAGE_SIZE.toString());
   url.searchParams.set('sort', 'created_date_desc');
-  url.searchParams.set('format', 'json');
+
+  // Date filter for incremental fetching
+  if (params.date_received_min) {
+    url.searchParams.set('date_received_min', params.date_received_min);
+  }
 
   if (params.frm) {
     url.searchParams.set('frm', params.frm.toString());
@@ -89,7 +94,19 @@ async function fetchPage(params = {}) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // Handle API returning a flat array (format=json style) vs ES format
+      if (Array.isArray(data)) {
+        return {
+          hits: {
+            total: { value: data.length },
+            hits: data,
+          },
+        };
+      }
+
+      return data;
 
     } catch (error) {
       console.error(`  Attempt ${attempt}/${CONFIG.MAX_RETRIES} failed: ${error.message}`);
@@ -113,8 +130,35 @@ function extractSearchAfter(hits) {
   return `${lastHit.sort[0]}_${lastHit.sort[1]}`;
 }
 
-async function fetchAllComplaints() {
-  console.log('Starting CFPB complaint data fetch...\n');
+function loadExistingData() {
+  if (!fs.existsSync(CONFIG.OUTPUT_FILE)) {
+    return { hits: [], ids: new Set(), latestDate: null };
+  }
+
+  try {
+    const raw = JSON.parse(fs.readFileSync(CONFIG.OUTPUT_FILE, 'utf8'));
+    const hits = raw.hits?.hits || [];
+    const ids = new Set(hits.map(h => h._id));
+
+    // Find the latest date_received
+    let latestDate = null;
+    for (const h of hits) {
+      const d = h._source?.date_received;
+      if (d && (!latestDate || d > latestDate)) {
+        latestDate = d;
+      }
+    }
+
+    return { hits, ids, latestDate };
+  } catch (e) {
+    console.error('Warning: Could not parse existing data file, starting fresh.');
+    return { hits: [], ids: new Set(), latestDate: null };
+  }
+}
+
+async function fetchNewComplaints(dateMin) {
+  const mode = dateMin ? `incremental (since ${dateMin})` : 'full';
+  console.log(`Starting CFPB complaint data fetch (${mode})...\n`);
   console.log(`Target companies: ${CRYPTO_COMPANIES.length}`);
   console.log(`Page size: ${CONFIG.PAGE_SIZE}\n`);
 
@@ -129,6 +173,9 @@ async function fetchAllComplaints() {
     console.log(`\nPage ${pageCount}:`);
 
     const params = { frm };
+    if (dateMin) {
+      params.date_received_min = dateMin;
+    }
     if (searchAfter) {
       params.search_after = searchAfter;
     }
@@ -137,7 +184,7 @@ async function fetchAllComplaints() {
 
     if (totalExpected === null) {
       totalExpected = response.hits?.total?.value || response.hits?.total || 0;
-      console.log(`  Total complaints available: ${totalExpected}`);
+      console.log(`  Total new complaints available: ${totalExpected}`);
     }
 
     const hits = response.hits?.hits || [];
@@ -162,19 +209,16 @@ async function fetchAllComplaints() {
     await sleep(CONFIG.REQUEST_DELAY_MS);
   }
 
-  return {
-    total: allHits.length,
-    hits: allHits,
-  };
+  return allHits;
 }
 
-function formatOutput(data) {
+function formatOutput(hits) {
   return {
     hits: {
       total: {
-        value: data.total,
+        value: hits.length,
       },
-      hits: data.hits,
+      hits: hits,
     },
   };
 }
@@ -183,46 +227,69 @@ async function main() {
   const startTime = Date.now();
 
   try {
-    const data = await fetchAllComplaints();
+    // Load existing data
+    const existing = loadExistingData();
+    console.log(`Existing data: ${existing.hits.length} complaints`);
+    if (existing.latestDate) {
+      console.log(`Latest date in existing data: ${existing.latestDate}`);
+    }
 
-    // Safety check: Don't overwrite good data with empty results
-    if (data.total === 0) {
+    // Fetch new complaints (incremental if we have existing data)
+    // Use a date 7 days before the latest to catch any late-arriving complaints
+    let dateMin = null;
+    if (existing.latestDate) {
+      const latest = new Date(existing.latestDate);
+      latest.setDate(latest.getDate() - 7);
+      dateMin = latest.toISOString().split('T')[0];
+    }
+
+    const newHits = await fetchNewComplaints(dateMin);
+
+    if (existing.hits.length === 0 && newHits.length === 0) {
       console.error('\nERROR: Fetch returned 0 complaints - API may be down or query failed.');
       console.error('Aborting to preserve existing data.');
       process.exit(1);
     }
 
-    // Safety check: Warn if we got significantly fewer results than expected (>50% drop)
-    if (fs.existsSync(CONFIG.OUTPUT_FILE)) {
-      try {
-        const existing = JSON.parse(fs.readFileSync(CONFIG.OUTPUT_FILE, 'utf8'));
-        const existingCount = existing.hits?.total?.value || 0;
-        if (existingCount > 0 && data.total < existingCount * 0.5) {
-          console.error(`\nWARNING: Got ${data.total} complaints but existing file has ${existingCount}.`);
-          console.error('This is a >50% drop - possible API issue. Aborting to preserve data.');
-          process.exit(1);
-        }
-      } catch (e) {
-        // Ignore errors reading existing file
+    // Merge: deduplicate by _id
+    let addedCount = 0;
+    for (const hit of newHits) {
+      if (!existing.ids.has(hit._id)) {
+        existing.hits.push(hit);
+        existing.ids.add(hit._id);
+        addedCount++;
       }
     }
 
-    const output = formatOutput(data);
+    // Sort by date_received descending
+    existing.hits.sort((a, b) => {
+      const da = a._source?.date_received || '';
+      const db = b._source?.date_received || '';
+      return db.localeCompare(da);
+    });
 
-    console.log(`\nWriting ${data.total} complaints to ${CONFIG.OUTPUT_FILE}...`);
+    const totalCount = existing.hits.length;
+    console.log(`\nNew complaints added: ${addedCount}`);
+    console.log(`Total complaints after merge: ${totalCount}`);
+
+    const output = formatOutput(existing.hits);
+
+    console.log(`Writing ${totalCount} complaints to ${CONFIG.OUTPUT_FILE}...`);
     fs.writeFileSync(CONFIG.OUTPUT_FILE, JSON.stringify(output), 'utf8');
 
     const fileSizeMB = (fs.statSync(CONFIG.OUTPUT_FILE).size / (1024 * 1024)).toFixed(2);
     const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
 
     console.log(`\nComplete!`);
-    console.log(`  Total complaints: ${data.total}`);
+    console.log(`  Total complaints: ${totalCount}`);
+    console.log(`  New complaints added: ${addedCount}`);
     console.log(`  File size: ${fileSizeMB} MB`);
     console.log(`  Elapsed time: ${elapsedSec}s`);
 
     // Output for GitHub Actions
     if (process.env.GITHUB_OUTPUT) {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `complaint_count=${data.total}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `complaint_count=${totalCount}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `new_complaints=${addedCount}\n`);
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `file_size_mb=${fileSizeMB}\n`);
     }
 
