@@ -50,8 +50,8 @@ const FALLBACK_PRICES = {
   '2025-05': 103000, '2025-06': 106000, '2025-07': 97000, '2025-08': 59000,
   '2025-09': 63000, '2025-10': 69000, '2025-11': 96000, '2025-12': 94000,
   // 2026 - Current Year (updated with accurate prices)
-  '2026-01': 97000, // January started high, dropped by end
-  '2026-02': 98000, // Current accurate price range
+  '2026-01': 95000, // January average
+  '2026-02': 78000, // Current price ~$78k
 };
 
 // Pre-computed fallback array (optimization: avoid repeated conversion)
