@@ -198,7 +198,7 @@ export function Dashboard() {
               <MetricCard
                 title="Fraud-Related"
                 value={`${fraudRate}%`}
-                subtitle="AI-classified fraud complaints"
+                subtitle="Fraud-related complaints"
               />
               <MetricCard
                 title="With Narratives"
