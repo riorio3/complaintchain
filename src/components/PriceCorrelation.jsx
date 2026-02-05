@@ -15,6 +15,10 @@ import {
 import { format, parseISO } from 'date-fns';
 import marketEvents from '../data/marketEvents.json';
 import { useCryptoPrice } from '../hooks/useCryptoPrice';
+import { useCryptoPriceV2 } from '../hooks/useCryptoPriceV2';
+
+// Feature flag for testing new price hook - set to true to test V2
+const USE_NEW_PRICE_HOOK = true;
 
 // Helper function for event colors
 const getEventColor = (type) => {
@@ -230,8 +234,11 @@ export function PriceCorrelation({ trendData }) {
     axisLabel: isDark ? '#ffffff' : '#1f2937',
   }), [isDark]);
 
-  // Fetch live BTC price data (refresh every 5 minutes)
-  const { priceData: livePriceData, currentPrice, loading: priceLoading, lastUpdated, isLive, dataSource } = useCryptoPrice('bitcoin', 730, 300000);
+  // Fetch live BTC price data
+  // V1: refresh every 5 minutes (300000ms), V2: refresh every 1 minute (60000ms)
+  const priceHookV1 = useCryptoPrice('bitcoin', 730, 300000);
+  const priceHookV2 = useCryptoPriceV2('bitcoin', 730, 60000);
+  const { priceData: livePriceData, currentPrice, loading: priceLoading, lastUpdated, isLive, dataSource } = USE_NEW_PRICE_HOOK ? priceHookV2 : priceHookV1;
 
   // Check if data is stale (older than 10 minutes)
   const isStale = lastUpdated && (Date.now() - lastUpdated.getTime() > 10 * 60 * 1000);
@@ -360,6 +367,11 @@ export function PriceCorrelation({ trendData }) {
                       <span>Static</span>
                     )}
                     {lastUpdated && <span className="hidden sm:inline ml-1 text-gray-400">({formatTime(lastUpdated)})</span>}
+                    {USE_NEW_PRICE_HOOK && (
+                      <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded font-medium">
+                        V2 TEST
+                      </span>
+                    )}
                   </>
                 )}
               </p>
